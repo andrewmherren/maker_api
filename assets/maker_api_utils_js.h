@@ -131,6 +131,9 @@ const MakerAPI = {
       this.updateStats();
       this.renderRoutes();
       this.showLoading(false);
+      
+      // Update server info with new spec data
+      this.updateServerInfo();
             
     } catch (error) {
       console.error('Failed to load routes:', error);
@@ -576,16 +579,40 @@ const MakerAPI = {
     let topRowContainer = document.querySelector('.top-row-container');
     if (!topRowContainer) {
       const topRowHtml = `
-        <div class="top-row-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-          <div class="spec-selector-container" style="padding: 15px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; backdrop-filter: blur(10px);">
-            <div class="form-group" style="margin: 0;">
-              <label for="spec-selector" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">📊 OpenAPI Specification:</label>
-              <select id="spec-selector" class="form-control" style="width: 300px; max-width: 100%;">
-                ${this.state.availableSpecs.map(spec => 
-                  `<option value="${spec.id}" ${spec.id === this.state.selectedSpec ? 'selected' : ''}>${spec.name}</option>`
-                ).join('')}
-              </select>
-              <small style="color: #666; margin-top: 4px; display: block;">Select which API specification to view and test.</small>
+        <div class="top-row-container has-spec" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+          <div class="spec-quadrant" style="display: flex; flex-direction: column; justify-content: space-around; gap: 15px; padding: 15px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; backdrop-filter: blur(10px);">
+            <!-- OpenAPI Specification -->
+            <div class="spec-selector-container">
+              <div class="form-group" style="margin: 0;">
+                <label for="spec-selector" class="quadrant-title">📊 OpenAPI Specification:</label>
+                <select id="spec-selector" class="form-control" style="width: 100%; max-width: 100%;">
+                  ${this.state.availableSpecs.map(spec => 
+                    `<option value="${spec.id}" ${spec.id === this.state.selectedSpec ? 'selected' : ''}>${spec.name}</option>`
+                  ).join('')}
+                </select>
+                <small style="color: #666; margin-top: 4px; display: block;">Select which API specification to view and test.</small>
+              </div>
+            </div>
+            
+            <!-- API Server Info -->
+            <div class="server-info-container">
+              <div class="form-group" style="margin: 0;">
+                <label class="quadrant-title">🌐 API Server:</label>
+                <div class="server-details" style="font-size: 14px;">
+                  <div class="server-item" style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <span class="label">Base URL:</span>
+                    <span class="value"">${window.location.origin}</span>
+                  </div>
+                  <div class="server-item" style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <span class="label"">Spec Version:</span>
+                    <span class="value" id="spec-version">Loading...</span>
+                  </div>
+                  <div class="server-item" style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <span class="label">Status:</span>
+                    <span class="server-status online" style="color: #66D56A; font-weight: bold;">🟢 Online</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <div class="token-placeholder"></div>
@@ -601,7 +628,18 @@ const MakerAPI = {
       const tokenPlaceholder = document.querySelector('.token-placeholder');
       if (tokenSection && tokenPlaceholder) {
         tokenPlaceholder.replaceWith(tokenSection);
+        
+        // Ensure token section has consistent title styling
+        const tokenLabels = tokenSection.querySelectorAll('label');
+        tokenLabels.forEach(label => {
+          if (!label.classList.contains('quadrant-title')) {
+            label.classList.add('quadrant-title');
+          }
+        });
       }
+      
+      // Update server info with actual spec data when available
+      this.updateServerInfo();
     }
     
     // Setup event listener for spec changes
@@ -625,11 +663,29 @@ const MakerAPI = {
     
     try {
       await this.loadRoutes();
+      
+      // Update server info with new spec data
+      this.updateServerInfo();
+      
       const specInfo = this.state.availableSpecs.find(spec => spec.id === newSpec);
       this.showToast(`Switched to ${specInfo ? specInfo.name : 'selected specification'}`, 'success');
     } catch (error) {
       console.error('Failed to switch specification:', error);
       this.showError(`Failed to load ${newSpec} specification: ${error.message}`);
+    }
+  },
+  
+  // Update server info section with current spec data
+  updateServerInfo() {
+    const specVersionEl = document.getElementById('spec-version');
+    if (!specVersionEl) return;
+    
+    if (this.state.openApiSpec && this.state.openApiSpec.info) {
+      const version = this.state.openApiSpec.info.version || 'Unknown';
+      const title = this.state.openApiSpec.info.title || 'API';
+      specVersionEl.textContent = `${title} v${version}`;
+    } else {
+      specVersionEl.textContent = 'Loading...';
     }
   },
   
@@ -665,10 +721,23 @@ const MakerAPI = {
     // Hide other UI elements
     this.showLoading(false);
     
-    // Set token section to full width when no spec selector
-    const tokenSection = document.getElementById('token-section');
-    if (tokenSection && tokenSection.parentElement) {
-      tokenSection.parentElement.style.gridTemplateColumns = '1fr';
+    // Update layout for no-spec case - change to single column with token section
+    const topRowContainer = document.querySelector('.top-row-container');
+    if (topRowContainer) {
+      topRowContainer.classList.remove('has-spec');
+      topRowContainer.classList.add('no-spec');
+      topRowContainer.style.gridTemplateColumns = '1fr';
+      
+      // Ensure token section styling is consistent even without spec
+      const tokenSection = document.getElementById('token-section');
+      if (tokenSection) {
+        const tokenLabels = tokenSection.querySelectorAll('label');
+        tokenLabels.forEach(label => {
+          if (!label.classList.contains('quadrant-title')) {
+            label.classList.add('quadrant-title');
+          }
+        });
+      }
     }
     
     const elements = {
