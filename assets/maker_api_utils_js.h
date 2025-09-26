@@ -70,7 +70,6 @@ const MakerAPI = {
   // Load OpenAPI configuration from server
   async loadOpenApiConfiguration() {
     try {
-      console.log('Fetching OpenAPI configuration from /maker_api/api/openapi/config...');
       const response = await AuthUtils.fetch('/maker_api/api/openapi/config', {
         method: 'POST',
         headers: {
@@ -106,9 +105,6 @@ const MakerAPI = {
         const makerSpec = this.state.availableSpecs.find(spec => spec.id === 'maker');
         this.state.selectedSpec = makerSpec ? 'maker' : this.state.availableSpecs[0].id;
       }
-      
-      console.log('OpenAPI configuration loaded:', this.state.openApiConfig);
-      console.log('Available specs:', this.state.availableSpecs);
       
     } catch (error) {
       console.error('Error fetching OpenAPI configuration:', error);
@@ -579,37 +575,37 @@ const MakerAPI = {
     let topRowContainer = document.querySelector('.top-row-container');
     if (!topRowContainer) {
       const topRowHtml = `
-        <div class="top-row-container has-spec" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-          <div class="spec-quadrant" style="display: flex; flex-direction: column; justify-content: space-around; gap: 15px; padding: 15px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; backdrop-filter: blur(10px);">
+        <div class="top-row-container has-spec">
+          <div class="spec-quadrant">
             <!-- OpenAPI Specification -->
             <div class="spec-selector-container">
-              <div class="form-group" style="margin: 0;">
+              <div class="form-group">
                 <label for="spec-selector" class="quadrant-title">📊 OpenAPI Specification:</label>
-                <select id="spec-selector" class="form-control" style="width: 100%; max-width: 100%;">
+                <select id="spec-selector" class="form-control">
                   ${this.state.availableSpecs.map(spec => 
                     `<option value="${spec.id}" ${spec.id === this.state.selectedSpec ? 'selected' : ''}>${spec.name}</option>`
                   ).join('')}
                 </select>
-                <small style="color: #666; margin-top: 4px; display: block;">Select which API specification to view and test.</small>
+                <small>Select which API specification to view and test.</small>
               </div>
             </div>
             
             <!-- API Server Info -->
             <div class="server-info-container">
-              <div class="form-group" style="margin: 0;">
+              <div class="form-group">
                 <label class="quadrant-title">🌐 API Server:</label>
-                <div class="server-details" style="font-size: 14px;">
-                  <div class="server-item" style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <div class="server-details">
+                  <div class="server-item">
                     <span class="label">Base URL:</span>
-                    <span class="value"">${window.location.origin}</span>
+                    <span class="value">${window.location.origin}</span>
                   </div>
-                  <div class="server-item" style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                    <span class="label"">Spec Version:</span>
+                  <div class="server-item">
+                    <span class="label">Spec Version:</span>
                     <span class="value" id="spec-version">Loading...</span>
                   </div>
-                  <div class="server-item" style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                  <div class="server-item">
                     <span class="label">Status:</span>
-                    <span class="server-status online" style="color: #66D56A; font-weight: bold;">🟢 Online</span>
+                    <span class="server-status online">🟢 Online</span>
                   </div>
                 </div>
               </div>
@@ -698,18 +694,18 @@ const MakerAPI = {
     }
     
     const messageHtml = `
-      <div class="no-specs-message" style="text-align: center; padding: 40px 20px; background: rgba(255, 255, 255, 0.1); border-radius: 15px; backdrop-filter: blur(10px); margin: 20px 0;">
-        <h2 style="color: #666; margin-bottom: 20px;">📋 No OpenAPI Specifications Available</h2>
-        <p style="color: #777; font-size: 16px; line-height: 1.6; max-width: 600px; margin: 0 auto 20px;">
+      <div class="no-specs-message">
+        <h2>📋 No OpenAPI Specifications Available</h2>
+        <p class="no-specs-description">
           OpenAPI documentation is not currently enabled. To enable API documentation and testing capabilities, compile your project with one or both of the following build flags:
         </p>
-        <div style="background: rgba(0, 0, 0, 0.1); padding: 20px; border-radius: 10px; margin: 20px auto; max-width: 500px; font-family: monospace;">
-          <div style="margin-bottom: 10px;"><strong>Full Platform API:</strong></div>
-          <div style="color: #0066cc; margin-bottom: 15px;">-DWEB_PLATFORM_OPENAPI=1</div>
-          <div style="margin-bottom: 10px;"><strong>Maker API Only:</strong></div>
-          <div style="color: #0066cc;">-DWEB_PLATFORM_MAKERAPI=1</div>
+        <div class="build-flags">
+          <div><strong>Full Platform API:</strong></div>
+          <div class="flag-value">-DWEB_PLATFORM_OPENAPI=1</div>
+          <div><strong>Maker API Only:</strong></div>
+          <div class="flag-value">-DWEB_PLATFORM_MAKERAPI=1</div>
         </div>
-        <p style="color: #777; font-size: 14px; margin-top: 20px;">
+        <p class="no-specs-instruction">
           Add these flags to your <code>platformio.ini</code> file under <code>build_flags =</code> and recompile to enable OpenAPI documentation.
         </p>
       </div>
@@ -726,7 +722,6 @@ const MakerAPI = {
     if (topRowContainer) {
       topRowContainer.classList.remove('has-spec');
       topRowContainer.classList.add('no-spec');
-      topRowContainer.style.gridTemplateColumns = '1fr';
       
       // Ensure token section styling is consistent even without spec
       const tokenSection = document.getElementById('token-section');
@@ -906,31 +901,10 @@ const MakerAPI = {
     this.updateTokenSectionStyles();
   },
   
-  // Update CSS for token section
+  // Update token section - styles now handled in CSS file
   updateTokenSectionStyles() {
-    // Add CSS for token selector if not already present
-    if (!document.getElementById('token-selector-styles')) {
-      const style = document.createElement('style');
-      style.id = 'token-selector-styles';
-      style.textContent = `
-        .token-controls .form-group {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          margin-bottom: 10px;
-        }
-        .token-selector {
-          width: 100%;
-          margin-bottom: 4px;
-        }
-        #api-token-input[disabled] {
-          background-color: #f0f0f0;
-          color: #333;
-          cursor: not-allowed;
-        }
-      `;
-      document.head.appendChild(style);
-    }
+    // Token section styling is now handled in maker_api_styles_css.h
+    // This function remains for any future dynamic styling needs
   },
   
   // Handle token selection change
@@ -2014,7 +1988,6 @@ const MakerAPI = {
         throw new Error('No selected specification available');
       }
       
-      console.log(`Fetching OpenAPI spec from ${selectedSpecInfo.url}...`);
       const response = await fetch(selectedSpecInfo.url, {
         method: 'GET',
         headers: {
@@ -2107,25 +2080,13 @@ const MakerAPI = {
     toast.className = `toast toast-${type}`;
     toast.textContent = message;
     
-    Object.assign(toast.style, {
-      position: 'fixed',
-      top: '20px',
-      right: '20px',
-      padding: '12px 16px',
-      borderRadius: '6px',
-      color: '#fff',
-      backgroundColor: type === 'success' ? '#4CAF50' : 
-                      type === 'error' ? '#F44336' : '#2196F3',
-      zIndex: '10000',
-      opacity: '0',
-      transition: 'opacity 0.3s ease'
-    });
-    
     document.body.appendChild(toast);
-    setTimeout(() => toast.style.opacity = '1', 50);
+    
+    // Trigger animation
+    setTimeout(() => toast.classList.add('show'), 50);
     
     setTimeout(() => {
-      toast.style.opacity = '0';
+      toast.classList.remove('show');
       setTimeout(() => toast.remove(), 300);
     }, 3000);
   },

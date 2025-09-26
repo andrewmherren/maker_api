@@ -33,30 +33,10 @@ const char MAKER_API_STYLES_CSS[] PROGMEM = R"css(
   grid-template-rows: 1fr;
 }
 
-/* Quadrant Styling - Consistent across all quadrants */
-.spec-quadrant,
-#token-section,
-.api-overview-section,
-.quick-actions-section {
-  padding: 15px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
-}
-
-.spec-quadrant:hover,
-#token-section:hover,
-.api-overview-section:hover,
-.quick-actions-section:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-/* Spec Quadrant Specific */
+/* Spec Quadrant Layout */
 .spec-quadrant {
   display: flex;
+  justify-content: space-around;
   flex-direction: column;
   gap: 15px;
   min-height: 140px;
@@ -91,7 +71,7 @@ const char MAKER_API_STYLES_CSS[] PROGMEM = R"css(
 }
 
 .server-item .label {
-  color: #fff
+  color: #fff;
 }
 
 .server-item .value {
@@ -111,6 +91,27 @@ const char MAKER_API_STYLES_CSS[] PROGMEM = R"css(
   padding: 2px 6px;
   border-radius: 3px;
   border: 1px solid rgba(76, 175, 80, 0.2);
+}
+
+/* Quadrant Styling - Consistent across all quadrants */
+.spec-quadrant,
+#token-section,
+.api-overview-section,
+.quick-actions-section {
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.spec-quadrant:hover,
+#token-section:hover,
+.api-overview-section:hover,
+.quick-actions-section:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 /* Token Section Height Matching */
@@ -140,7 +141,7 @@ const char MAKER_API_STYLES_CSS[] PROGMEM = R"css(
   outline: none;
 }
 
-/* Small text consistency */
+/* Small text consistency and quadrant labels */
 .spec-quadrant small,
 #token-section small {
   color: #666;
@@ -148,6 +149,13 @@ const char MAKER_API_STYLES_CSS[] PROGMEM = R"css(
   display: block;
   font-size: 12px;
   line-height: 1.3;
+}
+
+.quadrant-title {
+  color: #fff !important;
+  font-weight: 600;
+  font-size: 1em;
+  margin-bottom: 8px;
 }
 
 .page-header h1 {
@@ -482,7 +490,7 @@ const char MAKER_API_STYLES_CSS[] PROGMEM = R"css(
   margin-left: auto;
 }
 
-.api-auth-public {
+.api-auth-none {
   background: rgba(76, 175, 80, 0.3);
   color: #C8E6C9;
 }
@@ -497,9 +505,23 @@ const char MAKER_API_STYLES_CSS[] PROGMEM = R"css(
   color: #FFCDD2;
 }
 
+.api-auth-local_only {
+  background: rgba(103, 58, 183, 0.3);
+  color: #D1C4E9;
+}
+
 .api-auth-mixed {
   background: rgba(156, 39, 176, 0.3);
   color: #E1BEE7;
+}
+
+.api-auth-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.6em;
+  padding: 1px 3px;
+  margin-right: 2px;
+  border-radius: 2px;
 }
 
 /* Section expand/collapse functionality */
@@ -577,6 +599,97 @@ const char MAKER_API_STYLES_CSS[] PROGMEM = R"css(
 }
 
 /* Responsive design for quadrants */
+/* No Specs Message Styling */
+.no-specs-message {
+  text-align: center;
+  padding: 40px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+  margin: 20px 0;
+}
+
+.no-specs-message h2 {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.no-specs-description {
+  color: #777;
+  font-size: 16px;
+  line-height: 1.6;
+  max-width: 600px;
+  margin: 0 auto 20px;
+}
+
+.build-flags {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  border-radius: 10px;
+  margin: 20px auto;
+  max-width: 500px;
+  font-family: monospace;
+}
+
+.flag-value {
+  color: #0066cc;
+  margin-bottom: 15px;
+}
+
+.flag-value:last-child {
+  margin-bottom: 0;
+}
+
+.no-specs-instruction {
+  color: #777;
+  font-size: 14px;
+  margin-top: 20px;
+}
+
+.no-specs-instruction code {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 13px;
+}
+
+/* Toast notifications */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  color: #fff;
+  z-index: 10000;
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all 0.3s ease;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.toast-success {
+  background: #4CAF50;
+}
+
+.toast-error {
+  background: #F44336;
+}
+
+.toast-info {
+  background: #2196F3;
+}
+
+.toast-warning {
+  background: #FF9800;
+}
+
+/* Responsive design for quadrants */
 @media (max-width: 768px) {
   .top-row-container.has-spec {
     grid-template-columns: 1fr !important;
@@ -597,6 +710,19 @@ const char MAKER_API_STYLES_CSS[] PROGMEM = R"css(
   .server-item .value {
     font-size: 11px;
     word-break: break-all;
+  }
+  
+  .no-specs-description {
+    font-size: 14px;
+  }
+  
+  .build-flags {
+    font-size: 12px;
+    padding: 15px;
+  }
+  
+  .no-specs-instruction {
+    font-size: 12px;
   }
 }
 
@@ -700,7 +826,22 @@ const char MAKER_API_STYLES_CSS[] PROGMEM = R"css(
 }
 
 .token-controls .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   margin-bottom: 15px;
+}
+
+.token-selector {
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+#api-token-input[disabled] {
+  background-color: rgba(240, 240, 240, 0.1) !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  cursor: not-allowed;
+  opacity: 0.8;
 }
 
 .token-buttons {
