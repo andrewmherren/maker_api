@@ -1,0 +1,26 @@
+{
+    "name": "maker_api",
+    "version": "1.0.0",
+    "description": "API documentation and testing module for ESP32 with WebPlatform",
+    "keywords": "api, documentation, openapi, testing",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/andrewmherren/maker_api.git"
+    },
+    "authors": [
+        {
+            "name": "Andrew Herren",
+            "email": "andrew.herren@gmail.com",
+            "url": "https://github.com/andrwemherren"
+        }
+    ],
+    "license": "MIT",
+    "homepage": "https://github.com/andrewmherren/maker_api",
+    "dependencies": {
+        "bblanchon/ArduinoJson": "^6.20.0"
+    },
+    "frameworks": "arduino",
+    "platforms": [
+        "espressif32"
+    ]
+}
