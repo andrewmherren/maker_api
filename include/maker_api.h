@@ -16,7 +16,7 @@ public:
   std::vector<RouteVariant> getHttpRoutes() override;
   std::vector<RouteVariant> getHttpsRoutes() override;
   String getModuleName() const override { return "Maker API"; }
-  String getModuleVersion() const override { return "1.0.0"; }
+  String getModuleVersion() const override { return "0.1.0"; }
   String getModuleDescription() const override {
     return "API documentation and testing interface for makers";
   }

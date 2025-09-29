@@ -1,6 +1,6 @@
 {
     "name": "maker_api",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "description": "API documentation and testing module for ESP32 with WebPlatform",
     "keywords": "api, documentation, openapi, testing",
     "repository": {
@@ -10,7 +10,6 @@
     "authors": [
         {
             "name": "Andrew Herren",
-            "email": "andrew.herren@gmail.com",
             "url": "https://github.com/andrwemherren"
         }
     ],

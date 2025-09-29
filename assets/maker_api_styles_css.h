@@ -127,7 +127,6 @@ const char MAKER_API_STYLES_CSS[] PROGMEM = R"css(
 #token-section .form-control {
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #333;
   border-radius: 6px;
   padding: 8px 12px;
   font-size: 14px;
@@ -615,7 +614,7 @@ const char MAKER_API_STYLES_CSS[] PROGMEM = R"css(
 }
 
 .no-specs-description {
-  color: #777;
+  color: #555;
   font-size: 16px;
   line-height: 1.6;
   max-width: 600px;
@@ -641,7 +640,7 @@ const char MAKER_API_STYLES_CSS[] PROGMEM = R"css(
 }
 
 .no-specs-instruction {
-  color: #777;
+  color: #555;
   font-size: 14px;
   margin-top: 20px;
 }

@@ -22,24 +22,19 @@ void MakerAPIModule::handle() {
 }
 
 OpenAPIDocumentation MakerAPIModule::getOpenAPIConfigDocs() {
-  OpenAPIDocumentation doc =
-      OpenAPIFactory::create("Get OpenAPI configuration",
-                             "Retrieves a system information about the "
-                             "availability of OpenAPI information.",
-                             "getOpenAPIConfig", {"Maker API"});
-
-  doc.responseExample = R"({
-      "success": true,
-      "OpenApiConfig": {
-         fullSpec: true
-         makerSpec: true
-      }
-    })";
-
-  doc.responseSchema =
-      OpenAPIFactory::createSuccessResponse("System OpenAPI configuration");
-
-  return doc;
+  return OpenAPIFactory::create("Get OpenAPI configuration",
+                                "Retrieves a system information about the "
+                                "availability of OpenAPI information.",
+                                "getOpenAPIConfig", {"Maker API"})
+      .withResponseExample(R"({
+        "success": true,
+        "OpenApiConfig": {
+          fullSpec: true
+          makerSpec: true
+        }
+      })")
+      .withResponseSchema(OpenAPIFactory::createSuccessResponse(
+          "System OpenAPI configuration"));
 }
 
 void MakerAPIModule::getOpenAPIConfigHandler(WebRequest &req,
@@ -95,7 +90,7 @@ std::vector<RouteVariant> MakerAPIModule::getHttpRoutes() {
                {AuthType::LOCAL_ONLY}));
 
   routes.push_back(ApiRoute(
-      "openapi/config", WebModule::WM_POST,
+      "/config", WebModule::WM_POST,
       [this](WebRequest &req, WebResponse &res) {
         getOpenAPIConfigHandler(req, res);
       },

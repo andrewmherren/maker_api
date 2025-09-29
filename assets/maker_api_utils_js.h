@@ -70,7 +70,7 @@ const MakerAPI = {
   // Load OpenAPI configuration from server
   async loadOpenApiConfiguration() {
     try {
-      const response = await AuthUtils.fetch('/maker_api/api/openapi/config', {
+      const response = await AuthUtils.fetch('/maker_api/api/config', {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
@@ -86,7 +86,7 @@ const MakerAPI = {
       }
       
       const data = await response.json();
-      this.state.openApiConfig = data.OpenApiConfig || data.openApiConfig || {};
+      this.state.openApiConfig = data.OpenApiConfig || {};
       
       // Determine available specs
       this.state.availableSpecs = [];
@@ -98,12 +98,14 @@ const MakerAPI = {
       }
       
       // Set default selected spec
-      if (this.state.availableSpecs.length === 1) {
-        this.state.selectedSpec = this.state.availableSpecs[0].id;
-      } else if (this.state.availableSpecs.length > 1) {
-        // Default to maker spec if available, otherwise first available
-        const makerSpec = this.state.availableSpecs.find(spec => spec.id === 'maker');
-        this.state.selectedSpec = makerSpec ? 'maker' : this.state.availableSpecs[0].id;
+      if(!this.state.selectedSpec || !this.state.availableSpecs.includes(this.state.selectedSpec)) {
+        if (this.state.availableSpecs.length === 1) {
+          this.state.selectedSpec = this.state.availableSpecs[0].id;
+        } else if (this.state.availableSpecs.length > 1) {
+          // Default to maker spec if available, otherwise first available
+          const makerSpec = this.state.availableSpecs.find(spec => spec.id === 'maker');
+          this.state.selectedSpec = makerSpec ? 'maker' : this.state.availableSpecs[0].id;
+        }
       }
       
     } catch (error) {
@@ -370,6 +372,11 @@ const MakerAPI = {
     const refreshBtn = document.getElementById('refresh-routes');
     if (refreshBtn) {
       refreshBtn.addEventListener('click', () => this.refreshRoutes());
+    }
+      
+    const retryBtn = document.getElementById('retry-load');
+    if(retryBtn) {
+      retryBtn.addEventListener('click', () => this.refreshRoutes());
     }
     
     // Download OpenAPI spec
