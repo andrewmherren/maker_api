@@ -1,4 +1,4 @@
-# Maker API - Interactive API Explorer for WebPlatform
+# [Web Platform](https://www.github.com/andrewmherren/web_platform) - Interactive API Explorer for WebPlatform
 
 A comprehensive web module that provides an interactive API explorer interface for WebPlatform-enabled ESP32 devices. Think Swagger/Postman for your embedded projects, specifically designed for "maker-friendly" public APIs.
 
