@@ -49,7 +49,7 @@ void setup() {
     Authenticated(NavigationItem("Account", "/account")),
     Authenticated(NavigationItem("Logout", "/logout"))
   };
-  IWebModule::setNavigationMenu(navItems);
+  webPlatform.setNavigationMenu(navItems);
   
   // Initialize WebPlatform
   webPlatform.begin("MyDevice");
@@ -71,6 +71,7 @@ void setup() {
 
 void loop() {
   webPlatform.handle();
+  delay(10); // Allow ESP32 system tasks to run
 }
 ```
 

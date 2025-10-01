@@ -69,7 +69,7 @@ std::vector<RouteVariant> MakerAPIModule::getHttpRoutes() {
                               res.setProgmemContent(MAKER_API_DASHBOARD_HTML,
                                                     "text/html");
                             },
-                            {AuthType::SESSION}));
+                            {AuthType::NONE}));
 
   // Static assets
   routes.push_back(
@@ -78,7 +78,7 @@ std::vector<RouteVariant> MakerAPIModule::getHttpRoutes() {
                  res.setProgmemContent(MAKER_API_STYLES_CSS, "text/css");
                  res.setHeader("Cache-Control", "public, max-age=3600");
                },
-               {AuthType::LOCAL_ONLY}));
+               {AuthType::NONE}));
 
   routes.push_back(
       WebRoute("/assets/maker-api-utils.js", WebModule::WM_GET,
@@ -87,14 +87,15 @@ std::vector<RouteVariant> MakerAPIModule::getHttpRoutes() {
                                        "application/javascript; charset=utf-8");
                  res.setHeader("Cache-Control", "public, max-age=3600");
                },
-               {AuthType::LOCAL_ONLY}));
+               {AuthType::NONE}));
 
   routes.push_back(ApiRoute(
       "/config", WebModule::WM_POST,
       [this](WebRequest &req, WebResponse &res) {
         getOpenAPIConfigHandler(req, res);
       },
-      {AuthType::PAGE_TOKEN}, API_DOC_BLOCK(getOpenAPIConfigDocs())));
+      {AuthType::SESSION, AuthType::PAGE_TOKEN, AuthType::TOKEN},
+      API_DOC_BLOCK(getOpenAPIConfigDocs())));
 
   return routes;
 }
