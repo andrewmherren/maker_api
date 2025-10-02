@@ -70,7 +70,8 @@ const MakerAPI = {
   // Load OpenAPI configuration from server
   async loadOpenApiConfiguration() {
     try {
-      const response = await AuthUtils.fetch('/maker_api/api/config', {
+      const modulePrefix = AuthUtils.getModulePrefix();
+      const response = await AuthUtils.fetch(`${module_prefix}/api/config`, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
