@@ -46,8 +46,6 @@ Add the Maker API module to your WebPlatform project:
 #include <web_platform.h>
 #include <maker_api.h>
 
-MakerAPIModule makerAPI;
-
 void setup() {
   Serial.begin(115200);
   
@@ -60,22 +58,19 @@ void setup() {
   };
   webPlatform.setNavigationMenu(navItems);
   
+  // Register the API explorer module with default tag configuration (only "maker" tag)
+  webPlatform.registerModule("/api-explorer", &makerAPI);
+  // OR - Register with custom tags configuration
+  // This will include routes tagged with "maker", "public", or "external" in the Maker API spec
+  // DynamicJsonDocument tagsConfig(256);
+  // JsonArray tagsArray = tagsConfig.createNestedArray("tags");
+  // tagsArray.add("maker");
+  // tagsArray.add("public");
+  // tagsArray.add("external");
+  // webPlatform.registerModule("/api-explorer", &makerAPI, tagsConfig);
+
   // Initialize WebPlatform
   webPlatform.begin("MyDevice");
-  
-  if (webPlatform.isConnected()) {
-    // Register the API explorer module with default tag configuration (only "maker" tag)
-    webPlatform.registerModule("/api-explorer", &makerAPI);
-    
-    // OR - Register with custom tags configuration
-    // This will include routes tagged with "maker", "public", or "external" in the Maker API spec
-    DynamicJsonDocument tagsConfig(256);
-    JsonArray tagsArray = tagsConfig.createNestedArray("tags");
-    tagsArray.add("maker");
-    tagsArray.add("public");
-    tagsArray.add("external");
-    webPlatform.registerModule("/api-explorer", &makerAPI, tagsConfig);
-  }
 }
 
 void loop() {
