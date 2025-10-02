@@ -21,12 +21,21 @@ A comprehensive web module that provides an interactive API explorer interface f
 
 ### Build Configuration
 
-Enable the Maker API OpenAPI specification generation in your `platformio.ini`:
+Add the required dependencies and enable the Maker API OpenAPI specification generation in your `platformio.ini`:
 
 ```ini
-build_flags = 
-    ; ... other flags ...
-    -DWEB_PLATFORM_MAKERAPI=1
+[env:esp32-s3-devkitc-1]
+platform = espressif32
+board = esp32-s3-devkitc-1
+framework = arduino
+lib_deps = 
+  https://github.com/andrewmherren/web_platform.git
+  https://github.com/andrewmherren/maker_api.git
+  bblanchon/ArduinoJson@^6.20.0
+
+build_flags =
+  -DWEB_PLATFORM_OPENAPI=1
+  -DWEB_PLATFORM_MAKERAPI=1
 ```
 
 ### Installation
