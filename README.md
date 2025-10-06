@@ -31,7 +31,6 @@ framework = arduino
 lib_deps = 
   https://github.com/andrewmherren/web_platform.git
   https://github.com/andrewmherren/maker_api.git
-  bblanchon/ArduinoJson@^6.20.0
 
 build_flags =
   -DWEB_PLATFORM_OPENAPI=1

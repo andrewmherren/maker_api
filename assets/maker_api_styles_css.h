@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-// API Documentation styles - designed to work alongside web_ui_styles.h
+// API Documentation styles - designed to work alongside style_css.h
 const char MAKER_API_STYLES_CSS[] PROGMEM = R"css(
 /* Maker API Dashboard Styles */
 /* Comprehensive interface with search, filtering, and enhanced route display */
