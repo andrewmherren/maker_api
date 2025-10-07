@@ -9,9 +9,9 @@
 // Global instance of MakerAPIModule
 MakerAPIModule makerAPI;
 
-MakerAPIModule::MakerAPIModule() {}
+MakerAPIModule::MakerAPIModule() = default;
 
-MakerAPIModule::~MakerAPIModule() {}
+MakerAPIModule::~MakerAPIModule() = default;
 
 void MakerAPIModule::begin() {
   // Nothing needed here - we're just serving UI assets
@@ -54,7 +54,7 @@ void MakerAPIModule::getOpenAPIConfigHandler(WebRequest &req,
   JsonResponseBuilder::createResponse<512>(res, [&](JsonObject &root) {
     root["success"] = true;
 
-    JsonObject config = root.createNestedObject("OpenApiConfig");
+    JsonObject config = root["OpenApiConfig"].to<JsonObject>();
     config["fullSpec"] = fullSpec;
     config["makerSpec"] = makerSpec;
   });
