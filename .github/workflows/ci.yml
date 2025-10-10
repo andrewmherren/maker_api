@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test-analyze:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # needed for SonarCloud blame info
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install PlatformIO
+        run: pip install platformio gcovr
+
+      - name: Run native tests with coverage
+        run: |
+          pio test -e test_native --without-uploading --without-testing --verbose
+          pio test -e test_native --without-uploading
+          gcovr -r . --xml-pretty -o coverage.xml --exclude 'test/*' --exclude '.pio/*'
+
+      - name: Run Cppcheck static analysis
+        run: |
+          cppcheck --enable=all --xml --xml-version=2 src include 2> cppcheck-report.xml || true
+
+      - name: Upload coverage and analysis to SonarCloud
+        uses: SonarSource/sonarcloud-github-action@v2
+        with:
+          args: >
+            -Dsonar.cfamily.gcov.reportsPath=.
+            -Dsonar.coverageReportPaths=coverage.xml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

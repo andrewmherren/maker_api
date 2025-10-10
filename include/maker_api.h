@@ -2,7 +2,14 @@
 #define MAKER_API_H
 
 #include <Arduino.h>
+
+#ifdef MAKER_API_STANDALONE_TEST
+// Include mock definitions for standalone testing
+#include "../test/mock_web_platform.h"
+#else
+// Include actual web_platform for normal operation
 #include <web_platform.h>
+#endif
 
 class MakerAPIModule : public IWebModule {
 public:
