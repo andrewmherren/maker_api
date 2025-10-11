@@ -1,6 +1,10 @@
 #include "maker_api.h"
 #include <ArduinoJson.h>
 
+#ifndef MAKER_API_STANDALONE_TEST
+#include "platform_provider.h"
+#endif
+
 // Include static assets
 #include "../assets/maker_api_dashboard_html.h"
 #include "../assets/maker_api_styles_css.h"
@@ -9,7 +13,14 @@
 // Global instance of MakerAPIModule
 MakerAPIModule makerAPI;
 
-MakerAPIModule::MakerAPIModule() = default;
+MakerAPIModule::MakerAPIModule() : platformProvider(nullptr) {
+#ifndef MAKER_API_STANDALONE_TEST
+  // In production, use the global platform provider
+  platformProvider = IWebPlatformProvider::instance;
+#endif
+}
+
+MakerAPIModule::MakerAPIModule(IWebPlatformProvider* provider) : platformProvider(provider) {}
 
 MakerAPIModule::~MakerAPIModule() = default;
 
@@ -51,7 +62,7 @@ void MakerAPIModule::getOpenAPIConfigHandler(WebRequest &req,
 #endif
 
   // Use JsonResponseBuilder for simple response
-  JsonResponseBuilder::createResponse<512>(res, [&](JsonObject &root) {
+  getPlatform().createJsonResponse(res, [&](JsonObject &root) {
     root["success"] = true;
 
     JsonObject config = root["OpenApiConfig"].to<JsonObject>();

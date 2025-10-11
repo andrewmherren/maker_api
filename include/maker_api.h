@@ -2,24 +2,25 @@
 #define MAKER_API_H
 
 #include <Arduino.h>
-
-#ifdef MAKER_API_STANDALONE_TEST
-// Include mock definitions for standalone testing
-#include "../test/mock_web_platform.h"
-#else
-// Include actual web_platform for normal operation
-#include <web_platform.h>
-#endif
+#include <interface/openapi_factory.h>
+#include <interface/web_module_interface.h>
+#include <interface/web_platform_interface.h>
 
 class MakerAPIModule : public IWebModule {
 public:
+  // Default constructor - uses global provider instance
   MakerAPIModule();
+
+  // Optional constructor for dependency injection (tests)
+  MakerAPIModule(IWebPlatformProvider *provider);
+
   ~MakerAPIModule();
 
+  // Module lifecycle
   void begin() override;
   void handle() override;
 
-  // IWebModule interface implementation
+  // IWebModule interface
   std::vector<RouteVariant> getHttpRoutes() override;
   std::vector<RouteVariant> getHttpsRoutes() override;
   String getModuleName() const override { return "Maker API"; }
@@ -27,13 +28,21 @@ public:
   String getModuleDescription() const override {
     return "API documentation and testing interface for makers";
   }
+
   OpenAPIDocumentation getOpenAPIConfigDocs();
 
 private:
+  // Platform provider (injected or global)
+  IWebPlatformProvider *platformProvider;
+
+  // Helper to access the platform
+  IWebPlatform &getPlatform() const { return platformProvider->getPlatform(); }
+
+  // Internal handler
   void getOpenAPIConfigHandler(WebRequest &req, WebResponse &res);
 };
 
-// Global instance
+// Global instance for production builds
 extern MakerAPIModule makerAPI;
 
 #endif // MAKER_API_H

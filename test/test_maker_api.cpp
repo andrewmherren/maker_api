@@ -5,56 +5,75 @@
 #include <ArduinoJson.h>
 
 // Include mocks for web platform with compatibility layers
-#include "mock_web_platform.h"
-#include "string_compat.h"
+#include <testing/mock_web_platform.h>
+#include <testing/utils/string_compat.h>
 
 // Include the actual maker_api header
 #include "../include/maker_api.h"
+
+// Include the test setup helper
+#include <testing/testing_platform_provider.h>
+#include <testing/unified_test_setup.h>
 
 // Include assets for verification
 #include "../assets/maker_api_dashboard_html.h"
 #include "../assets/maker_api_styles_css.h"
 #include "../assets/maker_api_utils_js.h"
 
-// Test module instance
-MakerAPIModule testModule;
+static std::unique_ptr<MockWebPlatformProvider> mockProvider;
+static MakerAPIModule *testModule = nullptr;
 
 void setUp() {
-  // Reset ArduinoFake state
   ArduinoFakeReset();
 
-  // Reset module state before each test
-  testModule = MakerAPIModule();
+  // Create mock platform provider and set the global instance
+  mockProvider = std::make_unique<MockWebPlatformProvider>();
+  IWebPlatformProvider::instance = mockProvider.get();
+
+  // Instantiate your module
+  testModule = new MakerAPIModule();
+  testModule->begin();
 }
 
 void tearDown() {
-  // Clean up after each test
+  delete testModule;
+  testModule = nullptr;
+
+  mockProvider.reset();
+  IWebPlatformProvider::instance = nullptr;
 }
 
 // Test module basic properties
 void test_maker_api_module_properties() {
-  TEST_ASSERT_EQUAL_STRING("Maker API", testModule.getModuleName().c_str());
-  TEST_ASSERT_EQUAL_STRING("0.1.0", testModule.getModuleVersion().c_str());
+  auto &module = auto &module = *testModule;
+  ;
+  TEST_ASSERT_EQUAL_STRING("Maker API", module.getModuleName().c_str());
+  TEST_ASSERT_EQUAL_STRING("0.1.0", module.getModuleVersion().c_str());
 
-  String description = testModule.getModuleDescription();
+  String description = module.getModuleDescription();
   TEST_ASSERT_TRUE(description.length() > 0);
   TEST_ASSERT_TRUE(description.indexOf("API documentation") >= 0);
 }
 
 // Test module lifecycle methods
 void test_maker_api_module_lifecycle() {
-  // begin() should not crash
-  testModule.begin();
+  auto &module = auto &module = *testModule;
+  ;
+
+  // begin() should not crash (already called in setUp)
+  module.begin();
   TEST_ASSERT_TRUE(true); // If we get here, begin() succeeded
 
   // handle() should not crash
-  testModule.handle();
+  module.handle();
   TEST_ASSERT_TRUE(true); // If we get here, handle() succeeded
 }
 
 // Test HTTP routes generation
 void test_maker_api_http_routes() {
-  std::vector<RouteVariant> routes = testModule.getHttpRoutes();
+  auto &module = auto &module = *testModule;
+  ;
+  std::vector<RouteVariant> routes = module.getHttpRoutes();
 
   // Should have exactly 4 routes: dashboard, CSS, JS, and config API
   TEST_ASSERT_EQUAL(4, routes.size());
@@ -67,8 +86,10 @@ void test_maker_api_http_routes() {
 
 // Test HTTPS routes (should be identical to HTTP)
 void test_maker_api_https_routes() {
-  std::vector<RouteVariant> httpRoutes = testModule.getHttpRoutes();
-  std::vector<RouteVariant> httpsRoutes = testModule.getHttpsRoutes();
+  auto &module = auto &module = *testModule;
+  ;
+  std::vector<RouteVariant> httpRoutes = module.getHttpRoutes();
+  std::vector<RouteVariant> httpsRoutes = module.getHttpsRoutes();
 
   TEST_ASSERT_EQUAL(httpRoutes.size(), httpsRoutes.size());
   TEST_ASSERT_EQUAL(4, httpsRoutes.size());
@@ -76,7 +97,9 @@ void test_maker_api_https_routes() {
 
 // Test OpenAPI documentation generation
 void test_maker_api_openapi_docs() {
-  OpenAPIDocumentation docs = testModule.getOpenAPIConfigDocs();
+  auto &module = auto &module = *testModule;
+  ;
+  OpenAPIDocumentation docs = module.getOpenAPIConfigDocs();
 
   // Should have meaningful documentation
   TEST_ASSERT_TRUE(docs.summary.length() > 0);
@@ -140,7 +163,9 @@ public:
 
 // Test config API handler with proper JSON handling
 void test_maker_api_config_api_handler() {
-  std::vector<RouteVariant> routes = testModule.getHttpRoutes();
+  auto &module = auto &module = *testModule;
+  ;
+  std::vector<RouteVariant> routes = module.getHttpRoutes();
   TEST_ASSERT_GREATER_THAN(3, routes.size());
 
   // Get API config route (should be fourth route)
