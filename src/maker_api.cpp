@@ -20,7 +20,8 @@ MakerAPIModule::MakerAPIModule() : platformProvider(nullptr) {
 #endif
 }
 
-MakerAPIModule::MakerAPIModule(IWebPlatformProvider* provider) : platformProvider(provider) {}
+MakerAPIModule::MakerAPIModule(IWebPlatformProvider *provider)
+    : platformProvider(provider) {}
 
 MakerAPIModule::~MakerAPIModule() = default;
 

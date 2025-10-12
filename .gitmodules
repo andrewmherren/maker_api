@@ -1,0 +1,3 @@
+[submodule "lib/web_platform_interface"]
+	path = lib/web_platform_interface
+	url = https://github.com/andrewmherren/web_platform_interface.git

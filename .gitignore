@@ -51,7 +51,6 @@ bin/
 obj/
 
 # Custom
-lib/*
 src/server_*.pem
 src/server_*.der
 LOCAL_*

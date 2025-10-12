@@ -16,6 +16,9 @@ jobs:
         with:
           fetch-depth: 0 # needed for SonarCloud blame info
 
+      - name: Initialize submodules
+        run: git submodule update --init --recursive
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -26,13 +29,12 @@ jobs:
 
       - name: Run native tests with coverage
         run: |
-          pio test -e test_native --without-uploading --without-testing --verbose
-          pio test -e test_native --without-uploading
+          pio test -e test_native --without-uploading -v
           gcovr -r . --xml-pretty -o coverage.xml --exclude 'test/*' --exclude '.pio/*'
 
       - name: Run Cppcheck static analysis
         run: |
-          cppcheck --enable=all --xml --xml-version=2 src include 2> cppcheck-report.xml || true
+          cppcheck --enable=all --xml --xml-version=2 src include lib 2> cppcheck-report.xml || true
 
       - name: Upload coverage and analysis to SonarCloud
         uses: SonarSource/sonarcloud-github-action@v2

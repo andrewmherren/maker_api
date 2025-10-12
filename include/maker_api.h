@@ -1,10 +1,13 @@
 #ifndef MAKER_API_H
 #define MAKER_API_H
 
+#ifdef ARDUINO
 #include <Arduino.h>
-#include <interface/openapi_factory.h>
-#include <interface/web_module_interface.h>
-#include <interface/web_platform_interface.h>
+#else
+#include <ArduinoFake.h>
+#endif
+
+#include <web_platform_interface.h>
 
 class MakerAPIModule : public IWebModule {
 public:
