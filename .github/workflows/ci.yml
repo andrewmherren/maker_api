@@ -30,7 +30,7 @@ jobs:
       - name: Run native tests with coverage
         run: |
           pio test -e test_native --without-uploading -v
-          gcovr -r . --xml-pretty -o coverage.xml --exclude 'test/*' --exclude '.pio/*'
+          gcovr -r . --sonarqube -o coverage.xml --exclude 'test/*' --exclude '.pio/*'
 
       - name: Run Cppcheck static analysis
         run: |
