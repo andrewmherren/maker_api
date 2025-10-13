@@ -25,7 +25,9 @@ jobs:
           python-version: "3.11"
 
       - name: Install PlatformIO
-        run: pip install platformio gcovr
+        run: |
+          pip install --upgrade pip
+          pip install --upgrade platformio gcovr
 
       - name: Build to generate compile_commands.json
         run: |
