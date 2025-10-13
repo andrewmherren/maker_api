@@ -39,7 +39,7 @@ jobs:
       - name: Run native tests with coverage
         run: |
           pio test -e test_native --without-uploading -v
-          python -m gcovr -r . --xml-pretty -o coverage.xml --exclude 'test/*' --exclude '.pio/*'
+          python -m gcovr -r . --sonarqube coverage.xml --exclude 'test/*' --exclude '.pio/*'
 
       - name: Verify coverage.xml exists
         run: |
