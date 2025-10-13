@@ -31,7 +31,6 @@ jobs:
       - name: Build to generate compile_commands.json
         run: |
           pio run -e test_native --target compiledb
-          ls -lh ./pio/build/test_native/
         # After this step, .pio/build/test_native/compile_commands.json will exist
 
       - name: Run native tests with coverage
