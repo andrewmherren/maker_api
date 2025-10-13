@@ -51,6 +51,8 @@ jobs:
             -Dsonar.cfamily.compile-commands=.pio/build/test_native/compile_commands.json
             -Dsonar.cfamily.gcov.reportsPath=.
             -Dsonar.coverageReportPaths=coverage.xml
+            -Dsonar.sources=src
+            -Dsonar.exclusions=.pio/**,test/**,mock/**
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
