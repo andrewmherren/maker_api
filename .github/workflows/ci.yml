@@ -27,7 +27,7 @@ jobs:
       - name: Install PlatformIO and latest gcovr
         run: |
           pip install --upgrade platformio gcovr
-          pio pkg install -g tool-compiledb
+          pio pkg install tool-compiledb
 
       - name: Build to generate compile_commands.json
         run: |
