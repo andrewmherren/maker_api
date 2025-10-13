@@ -31,7 +31,7 @@ jobs:
       - name: Build to generate compile_commands.json
         run: |
           pio run -e test_native --target compiledb
-          head -n 20 .pio/build/test_native/compile_commands.json
+          tail -n 20 .pio/build/test_native/compile_commands.json
           pwd
         # After this step, .pio/build/test_native/compile_commands.json will exist
 
