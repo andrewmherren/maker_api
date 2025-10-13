@@ -26,25 +26,19 @@ jobs:
 
       - name: Install PlatformIO and latest gcovr
         run: |
-          pip install --upgrade pip
-          pip uninstall -y gcovr || true
-          pip install --upgrade gcovr platformio
-          python -m gcovr --version
+          pip install --upgrade platformio gcovr
+          pio pkg install -g tool-compiledb
 
       - name: Build to generate compile_commands.json
         run: |
           pio run -e test_native --target compiledb
+          ls -lh ./pio/build/test_native/
         # After this step, .pio/build/test_native/compile_commands.json will exist
 
       - name: Run native tests with coverage
         run: |
           pio test -e test_native --without-uploading -v
           python -m gcovr -r . --sonarqube coverage.xml --exclude 'test/*' --exclude '.pio/*'
-
-      - name: Verify coverage.xml exists
-        run: |
-          ls -lh coverage.xml
-          head -20 coverage.xml
 
       - name: Run Cppcheck static analysis
         run: |
