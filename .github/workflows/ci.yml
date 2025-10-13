@@ -40,6 +40,7 @@ jobs:
         uses: SonarSource/sonarcloud-github-action@v2
         with:
           args: >
+            -Dsonar.cfamily.compile-commands=.pio/build/test_native/compile_commands.json
             -Dsonar.cfamily.gcov.reportsPath=.
             -Dsonar.coverageReportPaths=coverage.xml
         env:
