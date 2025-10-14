@@ -34,10 +34,12 @@ jobs:
           curl -sSLo $HOME/.sonar/build-wrapper-linux-x86.zip https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
           unzip -o $HOME/.sonar/build-wrapper-linux-x86.zip -d $HOME/.sonar/
 
-      - name: Build with build-wrapper
+      - name: Build for Sonar with dummy main
         run: |
+          echo 'int main(){return 0;}' > dummy_main.cpp
           $HOME/.sonar/build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-output \
             pio run -e test_native --target compiledb
+          rm dummy_main.cpp
 
       - name: Inspect wrapper output
         run: |
