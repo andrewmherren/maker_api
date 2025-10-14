@@ -28,11 +28,16 @@ jobs:
         run: |
           pip install --upgrade platformio gcovr
 
-      - name: Build to generate compile_commands.json
+      - name: Download and set up SonarCloud build-wrapper
         run: |
-          pio run -e test_native --target compiledb
-          mv .pio/build/test_native/compile_commands.json compile_commands.json
-          cat compile_commands.json | head -n 20
+          mkdir -p $HOME/.sonar
+          curl -sSLo $HOME/.sonar/build-wrapper-linux-x86.zip https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
+          unzip -o $HOME/.sonar/build-wrapper-linux-x86.zip -d $HOME/.sonar/
+
+      - name: Build with build-wrapper
+        run: |
+          $HOME/.sonar/build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-output \
+            pio run -e test_native
 
       - name: Run native tests with coverage
         run: |
@@ -42,10 +47,6 @@ jobs:
       - name: Run Cppcheck static analysis
         run: |
           cppcheck --enable=all --xml --xml-version=2 src include lib 2> cppcheck-report.xml || true
-
-      - name: Debug details
-        run: |
-          pwd
 
       - name: Upload coverage and analysis to SonarCloud
         uses: SonarSource/sonarcloud-github-action@v2
