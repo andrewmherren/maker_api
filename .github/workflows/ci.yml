@@ -37,7 +37,7 @@ jobs:
       - name: Build for Sonar with dummy main
         run: |
           $HOME/.sonar/build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-output \
-            pio run -e sonar --target compiledb
+            pio run -e test_native
 
       - name: Inspect wrapper output
         run: |
