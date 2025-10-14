@@ -37,7 +37,12 @@ jobs:
       - name: Build with build-wrapper
         run: |
           $HOME/.sonar/build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-output \
-            pio test -e test_native --without-uploading --without-testing
+            pio test -e test_native --without-uploading --without-testing --force-rebuild
+
+      - name: Inspect wrapper output
+        run: |
+          ls -l bw-output
+          head -n 20 bw-output/compile_commands.json || true
 
       - name: Run native tests with coverage
         run: |
