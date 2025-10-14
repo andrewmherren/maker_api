@@ -41,11 +41,14 @@ jobs:
             pio run -e sonar
           rm -f src/main.cpp
 
-      - name: Inspect wrapper output
+      - name: Debug build-wrapper paths
         run: |
-          ls -l bw-output
-          cat bw-output/build-wrapper-dump.json || true
-          head -n 20 bw-output/compile_commands.json || true
+          echo "Current working dir:"
+          pwd
+          echo "GITHUB_WORKSPACE:"
+          echo $GITHUB_WORKSPACE
+          echo "First 20 files in compile_commands.json:"
+          jq -r '.[].file' bw-output/compile_commands.json | head -n 20
 
       - name: Run native tests with coverage
         run: |
