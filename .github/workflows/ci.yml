@@ -43,6 +43,10 @@ jobs:
         run: |
           cppcheck --enable=all --xml --xml-version=2 src include lib 2> cppcheck-report.xml || true
 
+      - name: Debug details
+        run: |
+          pwd
+
       - name: Upload coverage and analysis to SonarCloud
         uses: SonarSource/sonarcloud-github-action@v2
         with:
