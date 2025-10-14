@@ -26,7 +26,7 @@ jobs:
 
       - name: Install PlatformIO and latest gcovr
         run: |
-          pip install --upgrade platformio gcovr
+          pip install --upgrade platformio gcovr jq
 
       - name: Download and set up SonarCloud build-wrapper
         run: |
@@ -40,6 +40,13 @@ jobs:
           $HOME/.sonar/build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-output \
             pio run -e sonar
           rm -f src/main.cpp
+
+      - name: Convert compile_commands.json paths to absolute
+        run: |
+          cp bw-output/compile_commands.json bw-output/compile_commands.json.bak
+          jq --arg root "$GITHUB_WORKSPACE" '
+            map(.file |= ($root + "/" + .file))
+          ' bw-output/compile_commands.json.bak > bw-output/compile_commands.json
 
       - name: Debug build-wrapper paths
         run: |
@@ -66,4 +73,4 @@ jobs:
             -Dsonar.qualitygate.wait=true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ secr_
