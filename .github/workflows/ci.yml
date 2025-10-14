@@ -36,10 +36,8 @@ jobs:
 
       - name: Build for Sonar with dummy main
         run: |
-          echo 'int main(){return 0;}' > dummy_main.cpp
           $HOME/.sonar/build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-output \
             pio run -e sonar --target compiledb
-          rm dummy_main.cpp
 
       - name: Inspect wrapper output
         run: |
