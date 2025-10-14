@@ -42,7 +42,7 @@ jobs:
       - name: Inspect wrapper output
         run: |
           ls -l bw-output
-          cat bw-oupt/build-wrapper-dump.json || true
+          cat bw-output/build-wrapper-dump.json || true
           head -n 20 bw-output/compile_commands.json || true
 
       - name: Run native tests with coverage
