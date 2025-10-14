@@ -51,7 +51,6 @@ jobs:
             -Dsonar.cfamily.gcov.reportsPath=.
             -Dsonar.coverageReportPaths=coverage.xml
             -Dsonar.sources=src,include
-            -Dsonar.projectBaseDir=maker_api
             -Dsonar.exclusions=.pio/**,test/**,mock/**
             -Dsonar.scm.provider=git
         env:
