@@ -41,23 +41,19 @@ jobs:
             pio run -e sonar
           rm -f src/main.cpp
 
-      - name: Debug compile_commands.json structure
-        run: |
-          head -n 30 bw-output/compile_commands.json
-          jq 'keys' bw-output/compile_commands.json || true
-
-      - name: Fix paths in compile_commands.json
+      - name: Fix absolute paths in compile_commands.json
         run: |
           cp bw-output/compile_commands.json bw-output/compile_commands.json.bak
-          # Strip trailing invalid JSON if present
-          sed -i '/^\s*\[/,$!b;/^\s*[0-9]\+,\?\s*$/d' bw-output/compile_commands.json.bak
-          # Replace absolute paths with $GITHUB_WORKSPACE to ensure matching in Sonar
-          jq --arg ws "$GITHUB_WORKSPACE" '
-            map(
-              if has("file") then .file = (.file | sub("^"; "\($ws)/")) else . end |
-              if has("directory") then .directory = $ws else . end
-            )
-          ' bw-output/compile_commands.json.bak > bw-output/compile_commands.json
+          sed -i "s|/home/runner/work/maker_api/maker_api|$GITHUB_WORKSPACE|g" bw-output/compile_commands.json
+
+      - name: Debug build-wrapper paths
+        run: |
+          echo "Current working dir:"
+          pwd
+          echo "GITHUB_WORKSPACE:"
+          echo $GITHUB_WORKSPACE
+          echo "First 20 files in compile_commands.json:"
+          jq -r '.[].file' bw-output/compile_commands.json | head -n 20
 
       - name: Run native tests with coverage
         run: |
