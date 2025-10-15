@@ -41,7 +41,7 @@ jobs:
             pio run -e sonar
           rm -f src/main.cpp
 
-      - name: Debug: check workspace and source files
+      - name: Debug check workspace and source files
         run: |
           echo "PWD: $(pwd)"
           echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
@@ -66,7 +66,7 @@ jobs:
             )
           ' bw-output/compile_commands.json > "$tmpfile" && mv "$tmpfile" bw-output/compile_commands.json
 
-      - name: Debug: inspect compile_commands.json
+      - name: Debug inspect compile_commands.json
         run: |
           echo "Number of entries in compile_commands.json:"
           jq length bw-output/compile_commands.json
@@ -84,7 +84,7 @@ jobs:
         run: |
           cppcheck --enable=all --xml --xml-version=2 src include lib 2> cppcheck-report.xml || true
 
-      - name: Debug: check files for Sonar indexing
+      - name: Debug check files for Sonar indexing
         run: |
           echo "Files in src/ matching sonar.sources:"
           find $GITHUB_WORKSPACE/src -type f | head -n 20
