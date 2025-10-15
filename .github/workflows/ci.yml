@@ -57,29 +57,29 @@ jobs:
           echo "Backing up original compile_commands.json..."
           cp bw-output/compile_commands.json bw-output/compile_commands.json.bak
 
-          echo "Re-mapping paths for SonarCloud..."
+          echo "Normalizing compile_commands.json structure..."
           tmpfile=$(mktemp)
 
-          jq --arg root "/github/workspace" '
-            map(
-              select(
-                (.file | test("src/|include/")) and
-                (.file | test("\\.pio/libdeps/") | not)
+          # Normalize nested arrays, then rewrite paths for SonarCloud
+          jq --arg dir "$GITHUB_WORKSPACE" '
+            # If the root element is an array of arrays, flatten it
+            (if (.[0] | type) == "array" then flatten else . end)
+            # Now map over the entries to fix directory and file paths
+            | map(
+                .directory = $dir
+                | if (.file | startswith("/")) then . else .file = ($dir + "/" + .file) end
               )
-              | .directory = ($root + "/" + (.file | split("/") | .[0:-1] | join("/")))
-              | .file = (.file | split("/") | .[-1])
-            )
           ' bw-output/compile_commands.json > "$tmpfile" && mv "$tmpfile" bw-output/compile_commands.json
 
           echo "Resulting entries (first 20):"
-          jq -r '.[].directory + "/" + .file' bw-output/compile_commands.json | head -n 20
+          jq -r '.[].file' bw-output/compile_commands.json | head -n 20
 
           echo "Checking that listed directories exist inside container:"
-          jq -r '.[].directory' bw-output/compile_commands.json | sort -u | while read d; do
-            if [ -d "$d" ]; then
-              echo "✅ $d"
+          jq -r '.[].directory' bw-output/compile_commands.json | sort -u | while read dir; do
+            if [ -d "$dir" ]; then
+              echo "✅ Exists: $dir"
             else
-              echo "❌ Missing: $d"
+              echo "❌ Missing: $dir"
             fi
           done
 
