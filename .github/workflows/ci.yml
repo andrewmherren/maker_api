@@ -58,17 +58,7 @@ jobs:
           cp bw-output/compile_commands.json bw-output/compile_commands.json.bak
 
           tmpfile=$(mktemp)
-          jq --arg dir "$GITHUB_WORKSPACE" '
-            map(
-              .directory = $dir
-              | if (.file | startswith("/")) then . else .file = ($dir + "/" + .file) end
-            )
-          ' bw-output/compile_commands.json > "$tmpfile" && mv "$tmpfile" bw-output/compile_commands.json
-
-          echo "First 20 fixed paths:"
-          jq -r '.[].file' bw-output/compile_commands.json | head -n 20
-          echo "First 5 directory entries:"
-          jq -r '.[].directory' bw-output/compile_commands.json | head -n 5
+          jq 'map(.directory = (.file | sub("/[^/]+$"; "")))' bw-output/compile_commands.json > "$tmpfile" && mv "$tmpfile" bw-output/compile_commands.json
 
       - name: Debug inspect compile_commands.json
         run: |
@@ -76,6 +66,8 @@ jobs:
           jq length bw-output/compile_commands.json
           echo "First 20 files in compile_commands.json:"
           jq -r '.[].file' bw-output/compile_commands.json | head -n 20
+          echo "directories in compile_commands.json:"
+          jq -r '.[].directory + "/" + .file' bw-output/compile_commands.json | head -n 10
           echo "Build-wrapper output directory contents:"
           ls -l bw-output
 
