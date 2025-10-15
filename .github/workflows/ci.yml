@@ -1,74 +1,95 @@
-name: CI
+name: SonarCloud Analysis
 
 on:
   push:
-    branches: [main, dev]
+    branches:
+      - main
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
-  build-test-analyze:
+  sonar:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout the repo
       - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # needed for SonarCloud blame info
+        uses: actions/checkout@v3
 
-      - name: Initialize submodules
-        run: git submodule update --init --recursive
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install PlatformIO and latest tools
+      # 2️⃣ Setup Python and PlatformIO
+      - name: Setup Python & PlatformIO
         run: |
-          pip install --upgrade platformio gcovr jq
+          sudo apt update
+          sudo apt install -y gcc g++ make python3-pip lcov
+          pip3 install platformio
 
-      - name: Download and set up SonarCloud build-wrapper
+      # 3️⃣ Optional: Setup conda if needed (copied from your previous workflow)
+      # Uncomment if you want conda environments
+      #- name: Setup Miniconda
+      #  run: |
+      #    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+      #    bash miniconda.sh -b -p $HOME/miniconda
+      #    export PATH="$HOME/miniconda/bin:$PATH"
+      #    conda init bash
+      #    source ~/.bashrc
+      #    conda env create -f environment.yml
+      #    conda activate obscura-panel-4led
+
+      # 4️⃣ Debug: Show files at start
+      - name: Debug starting directory
         run: |
-          mkdir -p $HOME/.sonar
-          curl -sSLo $HOME/.sonar/build-wrapper-linux-x86.zip https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
-          unzip -o $HOME/.sonar/build-wrapper-linux-x86.zip -d $HOME/.sonar/
+          echo "PWD = $PWD"
+          ls -R .
 
-      - name: Build for Sonar with dummy main
+      # 5️⃣ Setup SonarScanner
+      - name: Setup SonarScanner
         run: |
-          echo "int main() { return 0; }" > src/main.cpp
-          $HOME/.sonar/build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-output \
-            pio run -e sonar
-          rm -f src/main.cpp
+          wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+          unzip sonar-scanner-cli-5.0.1.3006-linux.zip
+          export PATH=$PATH:$PWD/sonar-scanner-5.0.1.3006-linux/bin
+          echo "SonarScanner version:"
+          sonar-scanner --version
 
-      - name: Debug check workspace and source files
+      # 6️⃣ Setup build-wrapper
+      - name: Setup Build Wrapper
         run: |
-          echo "PWD: $(pwd)"
-          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
-          echo "Contents of src/:"
-          ls -l src/
-          echo "Contents of include/:"
-          ls -l include/
-          echo "Contents of test/:"
-          ls -l test/
+          mkdir -p build-tools
+          cd build-tools
+          wget https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
+          unzip build-wrapper-linux-x86.zip
+          BUILD_WRAPPER_PATH=$PWD/build-wrapper-linux-x86
+          export PATH=$PATH:$BUILD_WRAPPER_PATH
+          cd $GITHUB_WORKSPACE
 
-      - name: Fix compile_commands.json for SonarCloud
+      # 7️⃣ Run PlatformIO build & tests with build-wrapper
+      - name: Build and test with build-wrapper
+        run: |
+          mkdir -p bw-output
+          echo "Running PlatformIO tests..."
+          build-tools/build-wrapper-linux-x86-64 --out-dir bw-output pio test -e native
+
+      # 8️⃣ Debug: show bw-output and .pio contents
+      - name: Debug bw-output & .pio
+        run: |
+          echo "Contents of bw-output:"
+          ls -R bw-output
+          echo "Contents of .pio:"
+          ls -R .pio
+
+      # 9️⃣ Fix compile_commands.json paths
+      - name: Normalize compile_commands.json for SonarCloud
         run: |
           echo "Backing up original compile_commands.json..."
           cp bw-output/compile_commands.json bw-output/compile_commands.json.bak
 
           echo "Normalizing compile_commands.json structure..."
           tmpfile=$(mktemp)
-
-          # Normalize nested arrays, then rewrite paths for SonarCloud
           jq --arg dir "$GITHUB_WORKSPACE" '
-            # If the root element is an array of arrays, flatten it
-            (if (.[0] | type) == "array" then flatten else . end)
-            # Now map over the entries to fix directory and file paths
-            | map(
-                .directory = $dir
-                | if (.file | startswith("/")) then . else .file = ($dir + "/" + .file) end
-              )
+            map(
+              .directory = $dir + "/" + (.directory | ltrimstr("./"))
+              | .file = if (.file | startswith("/")) then .file else $dir + "/" + .file end
+            )
           ' bw-output/compile_commands.json > "$tmpfile" && mv "$tmpfile" bw-output/compile_commands.json
 
           echo "Resulting entries (first 20):"
@@ -83,41 +104,23 @@ jobs:
             fi
           done
 
-      - name: Debug inspect compile_commands.json
+      # 🔟 Run SonarScanner
+      - name: Run SonarCloud analysis
         run: |
-          echo "Number of entries in compile_commands.json:"
-          jq length bw-output/compile_commands.json
-          echo "First 20 files in compile_commands.json:"
-          jq -r '.[].file' bw-output/compile_commands.json | head -n 20
-          echo "directories in compile_commands.json:"
-          jq -r '.[].directory + "/" + .file' bw-output/compile_commands.json | head -n 10
-          echo "Build-wrapper output directory contents:"
-          ls -l bw-output
-
-      - name: Run native tests with coverage
-        run: |
-          pio test -e test_native --without-uploading -v
-          python -m gcovr -r . --sonarqube coverage.xml --exclude 'test/*' --exclude '.pio/*'
-
-      - name: Run Cppcheck static analysis
-        run: |
-          cppcheck --enable=all --xml --xml-version=2 src include lib 2> cppcheck-report.xml || true
-
-      - name: Debug check files for Sonar indexing
-        run: |
-          echo "Files in src/ matching sonar.sources:"
-          find $GITHUB_WORKSPACE/src -type f | head -n 20
-          echo "Files in include/ matching sonar.sources:"
-          find $GITHUB_WORKSPACE/include -type f | head -n 20
-
-      - name: Upload coverage and analysis to SonarCloud
-        uses: SonarSource/sonarcloud-github-action@v2
-        with:
-          args: >
-            -Dsonar.sources=src,include
-            -Dsonar.cfamily.compile-commands=bw-output/compile_commands.json
-            -Dsonar.verbose=true
-            -Dsonar.qualitygate.wait=true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          sonar-scanner \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.organization=liminalspark \
+            -Dsonar.projectKey=liminalspark_maker_api \
+            -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.sources=$GITHUB_WORKSPACE/maker_api/src,$GITHUB_WORKSPACE/maker_api/include \
+            -Dsonar.tests=$GITHUB_WORKSPACE/maker_api/test \
+            -Dsonar.exclusions=**/build-wrapper-dump.json \
+            -Dsonar.coverage.exclusions=**/test/**/* \
+            -Dsonar.cfamily.compile-commands=$GITHUB_WORKSPACE/bw-output/compile_commands.json \
+            -Dsonar.cfamily.gcov.reportsPath=$GITHUB_WORKSPACE/.pio/build/native \
+            -Dsonar.cpp.file.suffixes=.cpp,.h,.hpp \
+            -Dsonar.c.file.suffixes=.c \
+            -Dsonar.lang.patterns.cpp=**/*.cpp,**/*.h,**/*.hpp \
+            -Dsonar.lang.patterns.c=**/*.c \
+            -Dsonar.sourceEncoding=UTF-8 \
+            -Dsonar.working.directory=$GITHUB_WORKSPACE/.scannerwork
