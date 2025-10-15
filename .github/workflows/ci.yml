@@ -58,8 +58,12 @@ jobs:
           cd build-tools
           wget https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
           unzip build-wrapper-linux-x86.zip
-          BUILD_WRAPPER_PATH=$PWD/build-wrapper-linux-x86
-          export PATH=$PATH:$BUILD_WRAPPER_PATH
+          # Confirm what file/directory exists
+          ls -l
+          # Make the binary executable
+          chmod +x build-wrapper-linux-x86-64
+          BUILD_WRAPPER_PATH=$PWD/build-wrapper-linux-x86-64
+          echo "BUILD_WRAPPER_PATH=$BUILD_WRAPPER_PATH" >> $GITHUB_ENV
           cd $GITHUB_WORKSPACE
 
       # 7️⃣ Run PlatformIO build & tests with build-wrapper
@@ -67,7 +71,7 @@ jobs:
         run: |
           mkdir -p bw-output
           echo "Running PlatformIO tests..."
-          build-tools/build-wrapper-linux-x86-64 --out-dir bw-output pio test -e native
+          $BUILD_WRAPPER_PATH --out-dir bw-output pio test -e native
 
       # 8️⃣ Debug: show bw-output and .pio contents
       - name: Debug bw-output & .pio
