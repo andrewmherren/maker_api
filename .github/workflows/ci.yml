@@ -54,19 +54,27 @@ jobs:
 
       - name: Fix compile_commands.json for SonarCloud
         run: |
-          echo "Fixing compile_commands.json for SonarCloud..."
+          echo "Backing up original compile_commands.json..."
           cp bw-output/compile_commands.json bw-output/compile_commands.json.bak
 
+          echo "Filtering and fixing paths for SonarCloud..."
           tmpfile=$(mktemp)
-          jq --arg dir "$GITHUB_WORKSPACE" '
+
+          jq --arg ws "$GITHUB_WORKSPACE" '
+            # Keep only your src/ and include/ files, exclude .pio/libdeps
             map(
-              .directory = $dir
-              | if (.file | startswith("/")) then . else .file = ($dir + "/" + .file) end
+              select(.file | test("src/|include/")) |
+              # Split file path to get directory and filename
+              .directory = ($ws + "/" + (.file | split("/") | .[0:-1] | join("/"))) |
+              .file = (.file | split("/") | .[-1])
             )
           ' bw-output/compile_commands.json > "$tmpfile" && mv "$tmpfile" bw-output/compile_commands.json
 
           echo "First 20 fixed files:"
           jq -r '.[].file' bw-output/compile_commands.json | head -n 20
+
+          echo "Checking directories exist:"
+          jq -r '.[].directory' bw-output/compile_commands.json | sort | uniq
 
       - name: Debug inspect compile_commands.json
         run: |
