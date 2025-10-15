@@ -85,8 +85,8 @@ jobs:
           echo "Running sonar-scanner..."
           sonar-scanner \
             -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.organization=liminalspark \
-            -Dsonar.projectKey=liminalspark_maker_api \
+            -Dsonar.organization=andrewmherren \
+            -Dsonar.projectKey=andrewmherren_maker_api \
             -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
             -Dsonar.sources=$GITHUB_WORKSPACE/src,$GITHUB_WORKSPACE/include \
             -Dsonar.tests=$GITHUB_WORKSPACE/test \
