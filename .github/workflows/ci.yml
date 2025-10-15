@@ -58,12 +58,14 @@ jobs:
           cd build-tools
           wget https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
           unzip build-wrapper-linux-x86.zip
-          # Confirm what file/directory exists
-          ls -l
-          # Make the binary executable
-          chmod +x build-wrapper-linux-x86-64
-          BUILD_WRAPPER_PATH=$PWD/build-wrapper-linux-x86-64
+
+          # Make the binary executable (note the directory)
+          chmod +x build-wrapper-linux-x86/build-wrapper-linux-x86-64
+
+          # Save path for later steps
+          BUILD_WRAPPER_PATH=$PWD/build-wrapper-linux-x86/build-wrapper-linux-x86-64
           echo "BUILD_WRAPPER_PATH=$BUILD_WRAPPER_PATH" >> $GITHUB_ENV
+
           cd $GITHUB_WORKSPACE
 
       # 7️⃣ Run PlatformIO build & tests with build-wrapper
