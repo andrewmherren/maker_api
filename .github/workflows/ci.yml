@@ -58,7 +58,15 @@ jobs:
           cp bw-output/compile_commands.json bw-output/compile_commands.json.bak
 
           tmpfile=$(mktemp)
-          jq 'map(.directory = (.file | sub("/[^/]+$"; "")))' bw-output/compile_commands.json > "$tmpfile" && mv "$tmpfile" bw-output/compile_commands.json
+          jq --arg dir "$GITHUB_WORKSPACE" '
+            map(
+              .directory = $dir
+              | if (.file | startswith("/")) then . else .file = ($dir + "/" + .file) end
+            )
+          ' bw-output/compile_commands.json > "$tmpfile" && mv "$tmpfile" bw-output/compile_commands.json
+
+          echo "First 20 fixed files:"
+          jq -r '.[].file' bw-output/compile_commands.json | head -n 20
 
       - name: Debug inspect compile_commands.json
         run: |
