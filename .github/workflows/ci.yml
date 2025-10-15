@@ -24,7 +24,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install PlatformIO and latest gcovr
+      - name: Install PlatformIO and latest tools
         run: |
           pip install --upgrade platformio gcovr jq
 
@@ -41,38 +41,39 @@ jobs:
             pio run -e sonar
           rm -f src/main.cpp
 
-      - name: Fix absolute paths in compile_commands.json
+      - name: Debug: check workspace and source files
         run: |
-          cp bw-output/compile_commands.json bw-output/compile_commands.json.bak
-          sed -i "s|/home/runner/work/maker_api/maker_api|$GITHUB_WORKSPACE|g" bw-output/compile_commands.json
+          echo "PWD: $(pwd)"
+          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+          echo "Contents of src/:"
+          ls -l src/
+          echo "Contents of include/:"
+          ls -l include/
+          echo "Contents of test/:"
+          ls -l test/
 
       - name: Fix absolute paths in compile_commands.json
         run: |
+          echo "Fixing absolute paths in compile_commands.json..."
           cp bw-output/compile_commands.json bw-output/compile_commands.json.bak
           sed -i "s|/home/runner/work/maker_api/maker_api|$GITHUB_WORKSPACE|g" bw-output/compile_commands.json
 
-          # Convert all relative file paths to absolute
-          echo "Converting relative file paths to absolute..."
+          # Convert any remaining relative file paths to absolute
           tmpfile=$(mktemp)
           jq --arg dir "$GITHUB_WORKSPACE" '
             map(
-              if (.file | startswith("/")) then .
-              else .file = ($dir + "/" + .file)
-              end
+              if (.file | startswith("/")) then . else .file = ($dir + "/" + .file) end
             )
           ' bw-output/compile_commands.json > "$tmpfile" && mv "$tmpfile" bw-output/compile_commands.json
 
-          echo "First few fixed paths:"
-          jq -r '.[].file' bw-output/compile_commands.json | head -n 10
-
-      - name: Debug build-wrapper paths
+      - name: Debug: inspect compile_commands.json
         run: |
-          echo "Current working dir:"
-          pwd
-          echo "GITHUB_WORKSPACE:"
-          echo $GITHUB_WORKSPACE
+          echo "Number of entries in compile_commands.json:"
+          jq length bw-output/compile_commands.json
           echo "First 20 files in compile_commands.json:"
           jq -r '.[].file' bw-output/compile_commands.json | head -n 20
+          echo "Build-wrapper output directory contents:"
+          ls -l bw-output
 
       - name: Run native tests with coverage
         run: |
@@ -83,11 +84,20 @@ jobs:
         run: |
           cppcheck --enable=all --xml --xml-version=2 src include lib 2> cppcheck-report.xml || true
 
+      - name: Debug: check files for Sonar indexing
+        run: |
+          echo "Files in src/ matching sonar.sources:"
+          find $GITHUB_WORKSPACE/src -type f | head -n 20
+          echo "Files in include/ matching sonar.sources:"
+          find $GITHUB_WORKSPACE/include -type f | head -n 20
+
       - name: Upload coverage and analysis to SonarCloud
         uses: SonarSource/sonarcloud-github-action@v2
         with:
           args: >
-            -Dsonar.sources=/home/runner/work/maker_api/maker_api/src
+            -Dsonar.sources=src,include
+            -Dsonar.cfamily.compile-commands=bw-output/compile_commands.json
+            -Dsonar.verbose=true
             -Dsonar.qualitygate.wait=true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
