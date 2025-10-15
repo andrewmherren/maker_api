@@ -73,7 +73,7 @@ jobs:
         run: |
           mkdir -p bw-output
           echo "Running PlatformIO tests..."
-          $BUILD_WRAPPER_PATH --out-dir bw-output pio test -e native
+          $BUILD_WRAPPER_PATH --out-dir bw-output pio test -e test_native
 
       # 8️⃣ Debug: show bw-output and .pio contents
       - name: Debug bw-output & .pio
@@ -123,7 +123,7 @@ jobs:
             -Dsonar.exclusions=**/build-wrapper-dump.json \
             -Dsonar.coverage.exclusions=**/test/**/* \
             -Dsonar.cfamily.compile-commands=$GITHUB_WORKSPACE/bw-output/compile_commands.json \
-            -Dsonar.cfamily.gcov.reportsPath=$GITHUB_WORKSPACE/.pio/build/native \
+            -Dsonar.cfamily.gcov.reportsPath=$GITHUB_WORKSPACE/.pio/build/test_native \
             -Dsonar.cpp.file.suffixes=.cpp,.h,.hpp \
             -Dsonar.c.file.suffixes=.c \
             -Dsonar.lang.patterns.cpp=**/*.cpp,**/*.h,**/*.hpp \
