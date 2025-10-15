@@ -57,24 +57,24 @@ jobs:
           echo "Backing up original compile_commands.json..."
           cp bw-output/compile_commands.json bw-output/compile_commands.json.bak
 
-          echo "Filtering and fixing paths for SonarCloud..."
+          echo "Filtering only src/ and include/ files and fixing directories..."
           tmpfile=$(mktemp)
 
           jq --arg ws "$GITHUB_WORKSPACE" '
-            # Keep only your src/ and include/ files, exclude .pio/libdeps
-            map(
-              select(.file | test("src/|include/")) |
-              # Split file path to get directory and filename
-              .directory = ($ws + "/" + (.file | split("/") | .[0:-1] | join("/"))) |
-              .file = (.file | split("/") | .[-1])
-            )
+            # Keep only your project source files
+            map(select(.file | test("src/|include/")))
+            | map(
+                # Set directory to the actual folder on disk
+                .directory = ($ws + "/" + (.file | split("/") | .[0:-1] | join("/"))) |
+                # Keep only the filename
+                .file = (.file | split("/") | .[-1])
+              )
+            # Remove entries where directory doesn't exist
+            | map(select(.directory | test("^" + $ws)))
           ' bw-output/compile_commands.json > "$tmpfile" && mv "$tmpfile" bw-output/compile_commands.json
 
-          echo "First 20 fixed files:"
-          jq -r '.[].file' bw-output/compile_commands.json | head -n 20
-
-          echo "Checking directories exist:"
-          jq -r '.[].directory' bw-output/compile_commands.json | sort | uniq
+          echo "Final compile_commands.json:"
+          jq -r '.[] | "\(.directory)/\(.file)"' bw-output/compile_commands.json
 
       - name: Debug inspect compile_commands.json
         run: |
