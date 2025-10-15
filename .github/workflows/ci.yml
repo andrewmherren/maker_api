@@ -82,15 +82,14 @@ jobs:
       # 9️⃣ Run SonarScanner
       - name: Run SonarCloud analysis
         run: |
-          ls -l $GITHUB_WORKSPACE
           echo "Running sonar-scanner..."
           sonar-scanner \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.organization=liminalspark \
             -Dsonar.projectKey=liminalspark_maker_api \
             -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
-            -Dsonar.sources=$GITHUB_WORKSPACE/maker_api/src,$GITHUB_WORKSPACE/maker_api/include \
-            -Dsonar.tests=$GITHUB_WORKSPACE/maker_api/test \
+            -Dsonar.sources=$GITHUB_WORKSPACE/src,$GITHUB_WORKSPACE/include \
+            -Dsonar.tests=$GITHUB_WORKSPACE/test \
             -Dsonar.exclusions=**/build-wrapper-dump.json \
             -Dsonar.coverage.exclusions=**/test/**/* \
             -Dsonar.cfamily.compile-commands=$GITHUB_WORKSPACE/bw-output/compile_commands.json \
