@@ -24,49 +24,70 @@ jobs:
           sudo apt install -y gcc g++ make python3-pip lcov unzip wget
           pip3 install platformio
 
-      # 3️⃣ Debug: Show starting directory
+      # 3️⃣ Debug: Show files at start
       - name: Debug starting directory
         run: |
           echo "PWD = $PWD"
           ls -R .
 
-      # 4️⃣ Setup SonarScanner
-      - name: Setup SonarScanner
+      # 4️⃣ Setup SonarScanner and Build Wrapper, write sonar.env
+      - name: Setup SonarScanner & Build Wrapper
         run: |
+          # SonarScanner
           wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
           unzip sonar-scanner-cli-5.0.1.3006-linux.zip
-          echo "$PWD/sonar-scanner-5.0.1.3006-linux/bin" >> $GITHUB_PATH
-      # Now sonar-scanner is in PATH for all subsequent steps
-      # 5️⃣ Setup Build Wrapper
-      - name: Setup Build Wrapper
-        run: |
+
+          # Build Wrapper
           mkdir -p build-tools
           cd build-tools
           wget https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
           unzip build-wrapper-linux-x86.zip
+
           chmod +x build-wrapper-linux-x86/build-wrapper-linux-x86-64
-          echo "BUILD_WRAPPER_PATH=$PWD/build-wrapper-linux-x86/build-wrapper-linux-x86-64" >> $GITHUB_ENV
+
+          # Save environment variables to sonar.env
           cd $GITHUB_WORKSPACE
+          echo "export PATH=$PWD/sonar-scanner-5.0.1.3006-linux/bin:$PWD/build-tools/build-wrapper-linux-x86:\$PATH" > sonar.env
+          echo "export BUILD_WRAPPER_PATH=$PWD/build-tools/build-wrapper-linux-x86/build-wrapper-linux-x86-64" >> sonar.env
+          echo "source $PWD/sonar.env" >> $GITHUB_ENV
+
+          # Debug sonar.env
+          cat sonar.env
+
+      # 5️⃣ Source sonar.env in this step
+      - name: Source sonar.env
+        run: |
+          source sonar.env
+          echo "PATH = $PATH"
+          echo "BUILD_WRAPPER_PATH = $BUILD_WRAPPER_PATH"
+          sonar-scanner --version
+          $BUILD_WRAPPER_PATH --help
 
       # 6️⃣ Run PlatformIO build & tests with build-wrapper
       - name: Build and test with build-wrapper
         run: |
+          source sonar.env
           mkdir -p bw-output
           echo "Running PlatformIO tests..."
-          $BUILD_WRAPPER_PATH --out-dir bw-output pio test -e test_native || true
+          $BUILD_WRAPPER_PATH --out-dir bw-output pio test -e test_native
 
       # 7️⃣ Debug: show bw-output and .pio contents
       - name: Debug bw-output & .pio
         run: |
+          source sonar.env
           echo "Contents of bw-output:"
-          ls -R bw-output || true
+          ls -R bw-output
           echo "Contents of .pio:"
-          ls -R .pio || true
+          ls -R .pio
 
       # 8️⃣ Normalize compile_commands.json for SonarCloud
       - name: Normalize compile_commands.json
         run: |
+          source sonar.env
+          echo "Backing up original compile_commands.json..."
           cp bw-output/compile_commands.json bw-output/compile_commands.json.bak
+
+          echo "Normalizing compile_commands.json structure..."
           tmpfile=$(mktemp)
           jq --arg dir "$GITHUB_WORKSPACE" '
             map(
@@ -75,10 +96,10 @@ jobs:
             )
           ' bw-output/compile_commands.json > "$tmpfile" && mv "$tmpfile" bw-output/compile_commands.json
 
-          echo "First 20 entries:"
+          echo "Resulting entries (first 20):"
           jq -r '.[].file' bw-output/compile_commands.json | head -n 20
 
-          echo "Checking directories exist:"
+          echo "Checking that listed directories exist:"
           jq -r '.[].directory' bw-output/compile_commands.json | sort -u | while read dir; do
             if [ -d "$dir" ]; then
               echo "✅ Exists: $dir"
@@ -87,10 +108,10 @@ jobs:
             fi
           done
 
-      # 9️⃣ Run SonarScanner
+      # 9️⃣ Run SonarCloud analysis
       - name: Run SonarCloud analysis
         run: |
-          echo "Running sonar-scanner..."
+          source sonar.env
           sonar-scanner \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.organization=liminalspark \
