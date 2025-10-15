@@ -82,7 +82,7 @@ jobs:
       # 9️⃣ Run SonarScanner
       - name: Run SonarCloud analysis
         run: |
-          ls -l $GITHUB_WORKSPACE/maker_api/
+          ls -l $GITHUB_WORKSPACE
           echo "Running sonar-scanner..."
           sonar-scanner \
             -Dsonar.host.url=https://sonarcloud.io \
