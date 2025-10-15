@@ -87,7 +87,7 @@ jobs:
         uses: SonarSource/sonarcloud-github-action@v2
         with:
           args: >
-            -Dsonar.sources=$(pwd)/src
+            -Dsonar.sources=/home/runner/work/maker_api/maker_api/src
             -Dsonar.qualitygate.wait=true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
