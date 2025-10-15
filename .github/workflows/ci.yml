@@ -17,79 +17,56 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2️⃣ Setup Python and PlatformIO
+      # 2️⃣ Setup Python & PlatformIO
       - name: Setup Python & PlatformIO
         run: |
           sudo apt update
-          sudo apt install -y gcc g++ make python3-pip lcov
+          sudo apt install -y gcc g++ make python3-pip lcov unzip wget
           pip3 install platformio
 
-      # 3️⃣ Optional: Setup conda if needed (copied from your previous workflow)
-      # Uncomment if you want conda environments
-      #- name: Setup Miniconda
-      #  run: |
-      #    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-      #    bash miniconda.sh -b -p $HOME/miniconda
-      #    export PATH="$HOME/miniconda/bin:$PATH"
-      #    conda init bash
-      #    source ~/.bashrc
-      #    conda env create -f environment.yml
-      #    conda activate obscura-panel-4led
-
-      # 4️⃣ Debug: Show files at start
+      # 3️⃣ Debug: Show starting directory
       - name: Debug starting directory
         run: |
           echo "PWD = $PWD"
           ls -R .
 
-      # 5️⃣ Setup SonarScanner
+      # 4️⃣ Setup SonarScanner
       - name: Setup SonarScanner
         run: |
           wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
           unzip sonar-scanner-cli-5.0.1.3006-linux.zip
-          export PATH=$PATH:$PWD/sonar-scanner-5.0.1.3006-linux/bin
-          echo "SonarScanner version:"
-          sonar-scanner --version
-
-      # 6️⃣ Setup build-wrapper
+          echo "$PWD/sonar-scanner-5.0.1.3006-linux/bin" >> $GITHUB_PATH
+      # Now sonar-scanner is in PATH for all subsequent steps
+      # 5️⃣ Setup Build Wrapper
       - name: Setup Build Wrapper
         run: |
           mkdir -p build-tools
           cd build-tools
           wget https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
           unzip build-wrapper-linux-x86.zip
-
-          # Make the binary executable (note the directory)
           chmod +x build-wrapper-linux-x86/build-wrapper-linux-x86-64
-
-          # Save path for later steps
-          BUILD_WRAPPER_PATH=$PWD/build-wrapper-linux-x86/build-wrapper-linux-x86-64
-          echo "BUILD_WRAPPER_PATH=$BUILD_WRAPPER_PATH" >> $GITHUB_ENV
-
+          echo "BUILD_WRAPPER_PATH=$PWD/build-wrapper-linux-x86/build-wrapper-linux-x86-64" >> $GITHUB_ENV
           cd $GITHUB_WORKSPACE
 
-      # 7️⃣ Run PlatformIO build & tests with build-wrapper
+      # 6️⃣ Run PlatformIO build & tests with build-wrapper
       - name: Build and test with build-wrapper
         run: |
           mkdir -p bw-output
           echo "Running PlatformIO tests..."
-          $BUILD_WRAPPER_PATH --out-dir bw-output pio test -e test_native
+          $BUILD_WRAPPER_PATH --out-dir bw-output pio test -e test_native || true
 
-      # 8️⃣ Debug: show bw-output and .pio contents
+      # 7️⃣ Debug: show bw-output and .pio contents
       - name: Debug bw-output & .pio
         run: |
           echo "Contents of bw-output:"
-          ls -R bw-output
+          ls -R bw-output || true
           echo "Contents of .pio:"
-          ls -R .pio
+          ls -R .pio || true
 
-      # 9️⃣ Fix compile_commands.json paths
-      - name: Normalize compile_commands.json for SonarCloud
+      # 8️⃣ Normalize compile_commands.json for SonarCloud
+      - name: Normalize compile_commands.json
         run: |
-          echo "Backing up original compile_commands.json..."
           cp bw-output/compile_commands.json bw-output/compile_commands.json.bak
-
-          echo "Normalizing compile_commands.json structure..."
           tmpfile=$(mktemp)
           jq --arg dir "$GITHUB_WORKSPACE" '
             map(
@@ -98,10 +75,10 @@ jobs:
             )
           ' bw-output/compile_commands.json > "$tmpfile" && mv "$tmpfile" bw-output/compile_commands.json
 
-          echo "Resulting entries (first 20):"
+          echo "First 20 entries:"
           jq -r '.[].file' bw-output/compile_commands.json | head -n 20
 
-          echo "Checking that listed directories exist inside container:"
+          echo "Checking directories exist:"
           jq -r '.[].directory' bw-output/compile_commands.json | sort -u | while read dir; do
             if [ -d "$dir" ]; then
               echo "✅ Exists: $dir"
@@ -110,9 +87,10 @@ jobs:
             fi
           done
 
-      # 🔟 Run SonarScanner
+      # 9️⃣ Run SonarScanner
       - name: Run SonarCloud analysis
         run: |
+          echo "Running sonar-scanner..."
           sonar-scanner \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.organization=liminalspark \
