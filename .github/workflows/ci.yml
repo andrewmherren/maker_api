@@ -46,12 +46,17 @@ jobs:
           head -n 30 bw-output/compile_commands.json
           jq 'keys' bw-output/compile_commands.json || true
 
-      - name: Convert compile_commands.json paths to absolute
+      - name: Fix paths in compile_commands.json
         run: |
           cp bw-output/compile_commands.json bw-output/compile_commands.json.bak
-          jq --arg root "$GITHUB_WORKSPACE" '
-            (if type == "array" then . else .commands end)
-            | map(if has("file") then .file |= ($root + "/" + .file) else . end)
+          # Strip trailing invalid JSON if present
+          sed -i '/^\s*\[/,$!b;/^\s*[0-9]\+,\?\s*$/d' bw-output/compile_commands.json.bak
+          # Replace absolute paths with $GITHUB_WORKSPACE to ensure matching in Sonar
+          jq --arg ws "$GITHUB_WORKSPACE" '
+            map(
+              if has("file") then .file = (.file | sub("^"; "\($ws)/")) else . end |
+              if has("directory") then .directory = $ws else . end
+            )
           ' bw-output/compile_commands.json.bak > bw-output/compile_commands.json
 
       - name: Run native tests with coverage
