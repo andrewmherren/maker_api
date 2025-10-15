@@ -46,6 +46,25 @@ jobs:
           cp bw-output/compile_commands.json bw-output/compile_commands.json.bak
           sed -i "s|/home/runner/work/maker_api/maker_api|$GITHUB_WORKSPACE|g" bw-output/compile_commands.json
 
+      - name: Fix absolute paths in compile_commands.json
+        run: |
+          cp bw-output/compile_commands.json bw-output/compile_commands.json.bak
+          sed -i "s|/home/runner/work/maker_api/maker_api|$GITHUB_WORKSPACE|g" bw-output/compile_commands.json
+
+          # Convert all relative file paths to absolute
+          echo "Converting relative file paths to absolute..."
+          tmpfile=$(mktemp)
+          jq --arg dir "$GITHUB_WORKSPACE" '
+            map(
+              if (.file | startswith("/")) then .
+              else .file = ($dir + "/" + .file)
+              end
+            )
+          ' bw-output/compile_commands.json > "$tmpfile" && mv "$tmpfile" bw-output/compile_commands.json
+
+          echo "First few fixed paths:"
+          jq -r '.[].file' bw-output/compile_commands.json | head -n 10
+
       - name: Debug build-wrapper paths
         run: |
           echo "Current working dir:"
