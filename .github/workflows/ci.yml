@@ -52,19 +52,23 @@ jobs:
           echo "Contents of test/:"
           ls -l test/
 
-      - name: Fix absolute paths in compile_commands.json
+      - name: Fix compile_commands.json for SonarCloud
         run: |
-          echo "Fixing absolute paths in compile_commands.json..."
+          echo "Fixing compile_commands.json for SonarCloud..."
           cp bw-output/compile_commands.json bw-output/compile_commands.json.bak
-          sed -i "s|/home/runner/work/maker_api/maker_api|$GITHUB_WORKSPACE|g" bw-output/compile_commands.json
 
-          # Convert any remaining relative file paths to absolute
           tmpfile=$(mktemp)
           jq --arg dir "$GITHUB_WORKSPACE" '
             map(
-              if (.file | startswith("/")) then . else .file = ($dir + "/" + .file) end
+              .directory = $dir
+              | if (.file | startswith("/")) then . else .file = ($dir + "/" + .file) end
             )
           ' bw-output/compile_commands.json > "$tmpfile" && mv "$tmpfile" bw-output/compile_commands.json
+
+          echo "First 20 fixed paths:"
+          jq -r '.[].file' bw-output/compile_commands.json | head -n 20
+          echo "First 5 directory entries:"
+          jq -r '.[].directory' bw-output/compile_commands.json | head -n 5
 
       - name: Debug inspect compile_commands.json
         run: |
