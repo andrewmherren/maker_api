@@ -41,6 +41,11 @@ jobs:
             pio run -e sonar
           rm -f src/main.cpp
 
+      - name: Debug compile_commands.json structure
+        run: |
+          head -n 30 bw-output/compile_commands.json
+          jq 'keys' bw-output/compile_commands.json || true
+
       - name: Convert compile_commands.json paths to absolute
         run: |
           cp bw-output/compile_commands.json bw-output/compile_commands.json.bak
@@ -48,15 +53,6 @@ jobs:
             (if type == "array" then . else .commands end)
             | map(if has("file") then .file |= ($root + "/" + .file) else . end)
           ' bw-output/compile_commands.json.bak > bw-output/compile_commands.json
-
-      - name: Debug build-wrapper paths
-        run: |
-          echo "Current working dir:"
-          pwd
-          echo "GITHUB_WORKSPACE:"
-          echo $GITHUB_WORKSPACE
-          echo "First 20 files in compile_commands.json:"
-          jq -r '.[].file' bw-output/compile_commands.json | head -n 20
 
       - name: Run native tests with coverage
         run: |
