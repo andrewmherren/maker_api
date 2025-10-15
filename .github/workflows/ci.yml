@@ -45,7 +45,8 @@ jobs:
         run: |
           cp bw-output/compile_commands.json bw-output/compile_commands.json.bak
           jq --arg root "$GITHUB_WORKSPACE" '
-            map(.file |= ($root + "/" + .file))
+            (if type == "array" then . else .commands end)
+            | map(if has("file") then .file |= ($root + "/" + .file) else . end)
           ' bw-output/compile_commands.json.bak > bw-output/compile_commands.json
 
       - name: Debug build-wrapper paths
