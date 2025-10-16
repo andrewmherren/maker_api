@@ -79,10 +79,10 @@ jobs:
       # 8️⃣ Debug: coverage
       - name: Debug coverage
         run: |
-          echo "Contents of bw-output:"
-          ls -R .pio/build/test_native || true
           echo "gcov files:"
-          find . -name "*.gcov" || true
+          ls -l .pio/build/test_native/src/maker_api.* || true
+          echo "check maker coverage:"
+          gcov -o .pio/build/test_native/src src/maker_api.cpp || true
 
       # 9️⃣ Run SonarCloud analysis
       - name: Run SonarCloud analysis
