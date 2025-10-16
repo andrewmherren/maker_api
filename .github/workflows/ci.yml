@@ -112,12 +112,11 @@ jobs:
             -Dsonar.exclusions=**/build-wrapper-dump.json \
             -Dsonar.coverage.exclusions=**/test/**/* \
             -Dsonar.cfamily.compile-commands=$GITHUB_WORKSPACE/bw-output/compile_commands.json \
-            -Dsonar.cfamily.gcov.reportsPath=$GITHUB_WORKSPACE/.pio/build/test_native \
+            -Dsonar.cfamily.gcov.reportsPath=$GITHUB_WORKSPACE/.pio/build/test_native/src \
             -Dsonar.cfamily.customTargetArch=x86_64 \
             -Dsonar.cfamily.customTargetVendor=pc \
             -Dsonar.cfamily.customTargetSystem=linux \
             -Dsonar.cfamily.customTargetEnv=gnu \
-            -Dsonar.cfamily.customPreprocessor='#define UNITY_INCLUDE_CONFIG_H\n#define MAKER_API_STANDALONE_TEST\n#define WEB_PLATFORM_OPENAPI 1\n#define WEB_PLATFORM_MAKERAPI 1\n#define ARDUINO_ARCH_ESP32\n#define NATIVE_PLATFORM\n#define ARDUINOFAKE_ENABLE_WIFI\n#define ARDUINOFAKE_ENABLE_SERIAL\n#define ARDUINOFAKE_ENABLE_STRING' \
             -Dsonar.cpp.file.suffixes=.cpp,.h,.hpp \
             -Dsonar.c.file.suffixes=.c \
             -Dsonar.lang.patterns.cpp=**/*.cpp,**/*.h,**/*.hpp \
