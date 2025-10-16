@@ -50,7 +50,7 @@ jobs:
         run: |
           mkdir -p bw-output
           echo "Running PlatformIO tests..."
-          $BUILD_WRAPPER_PATH --out-dir bw-output pio test -e test_native || true
+          $BUILD_WRAPPER_PATH --out-dir bw-output pio test -e test_native
       # 7️⃣ Debug: show bw-output and .pio contents
       - name: Debug bw-output & .pio
         run: |
@@ -59,26 +59,26 @@ jobs:
           echo "Contents of .pio:"
           ls -R .pio || true
       # 8️⃣ Normalize compile_commands.json for SonarCloud
-      - name: Normalize compile_commands.json
-        run: |
-          cp bw-output/compile_commands.json bw-output/compile_commands.json.bak
-          tmpfile=$(mktemp)
-          jq --arg dir "$GITHUB_WORKSPACE" '
-            map(
-              .directory = $dir + "/" + (.directory | ltrimstr("./"))
-              | .file = if (.file | startswith("/")) then .file else $dir + "/" + .file end
-            )
-          ' bw-output/compile_commands.json > "$tmpfile" && mv "$tmpfile" bw-output/compile_commands.json
-          echo "First 20 entries:"
-          jq -r '.[].file' bw-output/compile_commands.json | head -n 20
-          echo "Checking directories exist:"
-          jq -r '.[].directory' bw-output/compile_commands.json | sort -u | while read dir; do
-            if [ -d "$dir" ]; then
-              echo "✅ Exists: $dir"
-            else
-              echo "❌ Missing: $dir"
-            fi
-          done
+      # - name: Normalize compile_commands.json
+      #   run: |
+      #     cp bw-output/compile_commands.json bw-output/compile_commands.json.bak
+      #     tmpfile=$(mktemp)
+      #     jq --arg dir "$GITHUB_WORKSPACE" '
+      #       map(
+      #         .directory = $dir + "/" + (.directory | ltrimstr("./"))
+      #         | .file = if (.file | startswith("/")) then .file else $dir + "/" + .file end
+      #       )
+      #     ' bw-output/compile_commands.json > "$tmpfile" && mv "$tmpfile" bw-output/compile_commands.json
+      #     echo "First 20 entries:"
+      #     jq -r '.[].file' bw-output/compile_commands.json | head -n 20
+      #     echo "Checking directories exist:"
+      #     jq -r '.[].directory' bw-output/compile_commands.json | sort -u | while read dir; do
+      #       if [ -d "$dir" ]; then
+      #         echo "✅ Exists: $dir"
+      #       else
+      #         echo "❌ Missing: $dir"
+      #       fi
+      #     done
       # 9️⃣ Run SonarScanner
       - name: Run SonarCloud analysis
         run: |
