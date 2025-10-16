@@ -76,16 +76,13 @@ jobs:
           echo "Coverage summary:"
           lcov --summary coverage.info
 
-          echo "Copying gcov files to test_native root for SonarCloud..."
-          find .pio/build/test_native -name "*.gcov" -exec cp {} .pio/build/test_native/ \;
-
-      # 8️⃣ Debug: show bw-output and .pio contents
-      - name: Debug bw-output & .pio
+      # 8️⃣ Debug: coverage
+      - name: Debug coverage
         run: |
           echo "Contents of bw-output:"
-          ls -R bw-output || true
-          echo "Contents of .pio:"
-          ls -R .pio || true
+          ls -R .pio/build/test_native || true
+          echo "gcov files:"
+          find . -name "*.gcov" || true
 
       # 9️⃣ Run SonarCloud analysis
       - name: Run SonarCloud analysis
