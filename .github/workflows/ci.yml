@@ -55,12 +55,20 @@ jobs:
           echo "Running PlatformIO tests..."
           $BUILD_WRAPPER_PATH --out-dir bw-output pio test -e test_native
 
-      # 7️⃣ Generate C++ coverage data
+            # 7️⃣ Generate C++ coverage data
       - name: Generate coverage data
         run: |
           echo "Generating coverage data..."
+          echo "Available .gcno files:"
+          find .pio/build/test_native -name "*.gcno" | head -10
+          echo "\nFocusing on maker_api .gcno files:"
+          find .pio/build/test_native -name "*maker_api*.gcno" -ls
+
           cd .pio/build/test_native
+          echo "\nRunning gcov on all .gcno files..."
           find . -name "*.gcno" -exec gcov -b -l -p -c {} \;
+          echo "\nChecking if maker_api .gcov files were created:"
+          find . -name "*maker_api*.gcov" -ls
           cd $GITHUB_WORKSPACE
 
           echo "Generating lcov coverage info..."
@@ -76,15 +84,21 @@ jobs:
           echo "Coverage summary:"
           lcov --summary coverage.info
 
-      # 8️⃣ Debug: coverage
+            # 8️⃣ Debug: coverage
       - name: Debug coverage
         run: |
-          echo "gcov files:"
+          echo "Coverage data files:"
           ls -l .pio/build/test_native/src/maker_api.* || true
-          echo "check maker coverage:"
-          gcov -o .pio/build/test_native/src src/maker_api.cpp || true
+          echo "\nAll .gcov files generated:"
+          find . -name "*.gcov" | head -20
+          echo "\nSpecifically looking for maker_api gcov files:"
+          find . -name "*maker_api*.gcov" -ls || true
+          echo "\nTrying to manually generate maker_api gcov:"
+          cd .pio/build/test_native/src
+          gcov -b -c maker_api.gcda || true
+          ls -l *maker_api*.gcov || true
 
-      # 9️⃣ Run SonarCloud analysis
+            # 9️⃣ Run SonarCloud analysis
       - name: Run SonarCloud analysis
         run: |
           echo "Running sonar-scanner..."
@@ -99,6 +113,11 @@ jobs:
             -Dsonar.coverage.exclusions=**/test/**/* \
             -Dsonar.cfamily.compile-commands=$GITHUB_WORKSPACE/bw-output/compile_commands.json \
             -Dsonar.cfamily.gcov.reportsPath=$GITHUB_WORKSPACE/.pio/build/test_native \
+            -Dsonar.cfamily.customTargetArch=x86_64 \
+            -Dsonar.cfamily.customTargetVendor=pc \
+            -Dsonar.cfamily.customTargetSystem=linux \
+            -Dsonar.cfamily.customTargetEnv=gnu \
+            -Dsonar.cfamily.customPreprocessor='#define UNITY_INCLUDE_CONFIG_H\n#define MAKER_API_STANDALONE_TEST\n#define WEB_PLATFORM_OPENAPI 1\n#define WEB_PLATFORM_MAKERAPI 1\n#define ARDUINO_ARCH_ESP32\n#define NATIVE_PLATFORM\n#define ARDUINOFAKE_ENABLE_WIFI\n#define ARDUINOFAKE_ENABLE_SERIAL\n#define ARDUINOFAKE_ENABLE_STRING' \
             -Dsonar.cpp.file.suffixes=.cpp,.h,.hpp \
             -Dsonar.c.file.suffixes=.c \
             -Dsonar.lang.patterns.cpp=**/*.cpp,**/*.h,**/*.hpp \
