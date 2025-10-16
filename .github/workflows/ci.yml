@@ -23,18 +23,20 @@ jobs:
           sudo apt update
           sudo apt install -y gcc g++ make python3-pip lcov unzip wget
           pip3 install platformio
+
       # 3️⃣ Debug: Show starting directory
       - name: Debug starting directory
         run: |
           echo "PWD = $PWD"
           ls -R .
+
       # 4️⃣ Setup SonarScanner
       - name: Setup SonarScanner
         run: |
           wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
           unzip sonar-scanner-cli-5.0.1.3006-linux.zip
           echo "$PWD/sonar-scanner-5.0.1.3006-linux/bin" >> $GITHUB_PATH
-      # Now sonar-scanner is in PATH for all subsequent steps
+
       # 5️⃣ Setup Build Wrapper
       - name: Setup Build Wrapper
         run: |
@@ -45,41 +47,44 @@ jobs:
           chmod +x build-wrapper-linux-x86/build-wrapper-linux-x86-64
           echo "BUILD_WRAPPER_PATH=$PWD/build-wrapper-linux-x86/build-wrapper-linux-x86-64" >> $GITHUB_ENV
           cd $GITHUB_WORKSPACE
+
       # 6️⃣ Run PlatformIO build & tests with build-wrapper
       - name: Build and test with build-wrapper
         run: |
           mkdir -p bw-output
           echo "Running PlatformIO tests..."
           $BUILD_WRAPPER_PATH --out-dir bw-output pio test -e test_native
-      # 7️⃣ Debug: show bw-output and .pio contents
+
+      # 7️⃣ Generate C++ coverage data
+      - name: Generate coverage data
+        run: |
+          echo "Generating coverage data..."
+          cd .pio/build/test_native
+          find . -name "*.gcno" -exec gcov -b -l -p -c {} \;
+          cd $GITHUB_WORKSPACE
+
+          echo "Generating lcov coverage info..."
+          lcov --base-directory . \
+               --directory .pio/build/test_native \
+               --capture \
+               --output-file coverage.info \
+               --rc lcov_branch_coverage=1
+
+          echo "Filtering system files..."
+          lcov --remove coverage.info '/usr/*' --output-file coverage.info
+
+          echo "Coverage summary:"
+          lcov --summary coverage.info
+
+      # 8️⃣ Debug: show bw-output and .pio contents
       - name: Debug bw-output & .pio
         run: |
           echo "Contents of bw-output:"
           ls -R bw-output || true
           echo "Contents of .pio:"
           ls -R .pio || true
-      # 8️⃣ Normalize compile_commands.json for SonarCloud
-      # - name: Normalize compile_commands.json
-      #   run: |
-      #     cp bw-output/compile_commands.json bw-output/compile_commands.json.bak
-      #     tmpfile=$(mktemp)
-      #     jq --arg dir "$GITHUB_WORKSPACE" '
-      #       map(
-      #         .directory = $dir + "/" + (.directory | ltrimstr("./"))
-      #         | .file = if (.file | startswith("/")) then .file else $dir + "/" + .file end
-      #       )
-      #     ' bw-output/compile_commands.json > "$tmpfile" && mv "$tmpfile" bw-output/compile_commands.json
-      #     echo "First 20 entries:"
-      #     jq -r '.[].file' bw-output/compile_commands.json | head -n 20
-      #     echo "Checking directories exist:"
-      #     jq -r '.[].directory' bw-output/compile_commands.json | sort -u | while read dir; do
-      #       if [ -d "$dir" ]; then
-      #         echo "✅ Exists: $dir"
-      #       else
-      #         echo "❌ Missing: $dir"
-      #       fi
-      #     done
-      # 9️⃣ Run SonarScanner
+
+      # 9️⃣ Run SonarCloud analysis
       - name: Run SonarCloud analysis
         run: |
           echo "Running sonar-scanner..."
