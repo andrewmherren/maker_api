@@ -127,7 +127,7 @@ jobs:
             -Dsonar.exclusions=**/build-wrapper-dump.json \
             -Dsonar.coverage.exclusions=**/test/**/* \
             -Dsonar.cfamily.compile-commands=$GITHUB_WORKSPACE/bw-output/compile_commands.json \
-            -Dsonar.cfamily.gcov.reportsPath=$GITHUB_WORKSPACE/.pio/build/test_native \
+            -Dsonar.cfamily.gcov.reportsPath=$GITHUB_WORKSPACE \
             -Dsonar.cpp.file.suffixes=.cpp,.h,.hpp \
             -Dsonar.c.file.suffixes=.c \
             -Dsonar.lang.patterns.cpp=**/*.cpp,**/*.h,**/*.hpp \
