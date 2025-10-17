@@ -84,6 +84,12 @@ jobs:
           echo "Coverage summary:"
           lcov --summary coverage.info
 
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gcov-reports
+          path: .pio/build/test_native/**/*.gcov
+
       # 8️⃣ Debug: coverage
       - name: Debug coverage
         run: |
@@ -93,9 +99,6 @@ jobs:
           find . -name "*.gcov" | head -20
           echo "\nSpecifically looking for maker_api gcov files:"
           find . -name "*maker_api*.gcov" -ls || true
-          echo "\nTrying to manually generate maker_api gcov:"
-          cd .pio/build/test_native/src
-          gcov -b -c maker_api.gcda || true
           pwd
           ls -l *maker_api*.gcov || true
           echo "grep maker_api references:"
@@ -119,7 +122,7 @@ jobs:
             -Dsonar.exclusions=**/build-wrapper-dump.json \
             -Dsonar.coverage.exclusions=**/test/**/* \
             -Dsonar.cfamily.compile-commands=$GITHUB_WORKSPACE/bw-output/compile_commands.json \
-            -Dsonar.cfamily.gcov.reportsPath=$GITHUB_WORKSPACE/.pio/build/test_native/src \
+            -Dsonar.cfamily.gcov.reportsPath=$GITHUB_WORKSPACE/.pio/build/test_native \
             -Dsonar.cpp.file.suffixes=.cpp,.h,.hpp \
             -Dsonar.c.file.suffixes=.c \
             -Dsonar.lang.patterns.cpp=**/*.cpp,**/*.h,**/*.hpp \
