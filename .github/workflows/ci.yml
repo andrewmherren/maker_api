@@ -58,39 +58,26 @@ jobs:
       # 7️⃣ Generate C++ coverage data
       - name: Generate coverage data
         run: |
-          echo "🔍 Generating coverage data..."
+          echo "Generating coverage data..."
+          cd .pio/build/test_native
+          find . -name "*.gcno" -exec gcov -b -l -p -c {} \;
+          cd $GITHUB_WORKSPACE
 
-          echo "🧩 Listing .gcno files (first 10):"
-          find .pio/build/test_native -name "*.gcno" | head -10
+          echo "Generating lcov coverage info..."
+          lcov --base-directory . \
+              --directory .pio/build/test_native \
+              --capture \
+              --output-file coverage.info \
+              --rc lcov_branch_coverage=1
 
-          echo "📂 Running lcov capture..."
-          lcov --capture \
-               --directory .pio/build/test_native \
-               --base-directory $GITHUB_WORKSPACE \
-               --output-file coverage.info \
-               --rc lcov_branch_coverage=1
+          echo "Filtering system files..."
+          lcov --remove coverage.info '/usr/*' --output-file coverage.cleaned.info
 
-          echo "🧹 Filtering out system and test files..."
-          # lcov exits 25 when everything filtered out — not fatal
-          lcov --remove coverage.info \
-               '/usr/*' \
-               '*/.pio/libdeps/*' \
-               '*/test/*' \
-               '*/Unity/*' \
-               --output-file coverage.cleaned.info \
-               --rc lcov_branch_coverage=1 || true
+          echo "Making SF paths relative for SonarCloud..."
+          sed -i 's|SF:'"$PWD/"'|SF:|g' coverage.cleaned.info
 
-          echo "📊 Coverage summary (after filtering):"
-          lcov --summary coverage.cleaned.info || true
-          echo "coverage info":
-          head -n 30 coverage.cleaned.info
-          echo "pwd...":
-          pwd
-
-          echo "📦 Moving final coverage report to workspace root..."
-          mv coverage.cleaned.info coverage.info || true
-
-          echo "✅ Coverage generation complete. coverage.info ready for SonarCloud."
+          echo "Coverage summary:"
+          lcov --summary coverage.cleaned.info
 
       # 8️⃣ Upload artifacts
       - name: Upload coverage artifacts
