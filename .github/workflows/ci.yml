@@ -58,31 +58,36 @@ jobs:
       # 7️⃣ Generate C++ coverage data
       - name: Generate coverage data
         run: |
-          echo "Generating coverage data..."
-          echo "Available .gcno files:"
+          echo "🔍 Generating coverage data..."
+
+          echo "🧩 Listing .gcno files (first 10):"
           find .pio/build/test_native -name "*.gcno" | head -10
-          echo "\nFocusing on maker_api .gcno files:"
-          find .pio/build/test_native -name "*maker_api*.gcno" -ls
 
-          cd .pio/build/test_native
-          echo "\nRunning gcov on all .gcno files..."
-          find . -name "*.gcno" -exec gcov -b -l -p -c {} \;
-          echo "\nChecking if maker_api .gcov files were created:"
-          find . -name "*maker_api*.gcov" -ls
-          cd $GITHUB_WORKSPACE
-
-          echo "Generating lcov coverage info..."
-          lcov --base-directory . \
+          echo "📂 Running lcov capture..."
+          # Collect raw coverage
+          lcov --capture \
                --directory .pio/build/test_native \
-               --capture \
+               --base-directory $GITHUB_WORKSPACE \
                --output-file coverage.info \
                --rc lcov_branch_coverage=1
 
-          echo "Filtering system files..."
-          lcov --remove coverage.info '/usr/*' --output-file coverage.info
+          echo "🧹 Filtering out system and test files..."
+          # Remove STL, PlatformIO deps, and tests
+          lcov --remove coverage.info \
+               '/usr/*' \
+               '*/.pio/libdeps/*' \
+               '*/test/*' \
+               '*/Unity/*' \
+               --output-file coverage.cleaned.info \
+               --rc lcov_branch_coverage=1
 
-          echo "Coverage summary:"
-          lcov --summary coverage.info
+          echo "📊 Coverage summary (after filtering):"
+          lcov --summary coverage.cleaned.info
+
+          echo "📦 Moving final coverage report to workspace root..."
+          mv coverage.cleaned.info coverage.info
+
+          echo "✅ Coverage generation complete. coverage.info ready for SonarCloud."
 
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
