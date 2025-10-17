@@ -82,6 +82,10 @@ jobs:
 
           echo "📊 Coverage summary (after filtering):"
           lcov --summary coverage.cleaned.info || true
+          echo "coverage info":
+          head -n 30 coverage.cleaned.info
+          echo "pwd...":
+          pwd
 
           echo "📦 Moving final coverage report to workspace root..."
           mv coverage.cleaned.info coverage.info || true
@@ -92,8 +96,8 @@ jobs:
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: gcov-reports
-          path: .pio/build/test_native/**/*.gcov
+          name: coverage-info
+          path: $GITHUB_WORKSPACE/coverage.info
 
       # 9️⃣ Run SonarCloud analysis
       - name: Run SonarCloud analysis
