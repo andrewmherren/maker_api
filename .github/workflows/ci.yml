@@ -55,7 +55,7 @@ jobs:
           echo "Running PlatformIO tests..."
           $BUILD_WRAPPER_PATH --out-dir bw-output pio test -e test_native
 
-            # 7️⃣ Generate C++ coverage data
+      # 7️⃣ Generate C++ coverage data
       - name: Generate coverage data
         run: |
           echo "Generating coverage data..."
@@ -84,7 +84,7 @@ jobs:
           echo "Coverage summary:"
           lcov --summary coverage.info
 
-            # 8️⃣ Debug: coverage
+      # 8️⃣ Debug: coverage
       - name: Debug coverage
         run: |
           echo "Coverage data files:"
@@ -97,8 +97,9 @@ jobs:
           cd .pio/build/test_native/src
           gcov -b -c maker_api.gcda || true
           ls -l *maker_api*.gcov || true
+          grep -Hn "maker_api" .pio/build/test_native/src/*.gcov | head
 
-            # 9️⃣ Run SonarCloud analysis
+      # 9️⃣ Run SonarCloud analysis
       - name: Run SonarCloud analysis
         run: |
           echo "Running sonar-scanner..."
