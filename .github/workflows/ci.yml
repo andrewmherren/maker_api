@@ -79,6 +79,11 @@ jobs:
           echo "Coverage summary:"
           lcov --summary coverage.cleaned.info
 
+          echo "📦 Moving final coverage report to workspace root..."
+          mv coverage.cleaned.info coverage.info || true
+
+          echo "✅ Coverage generation complete. coverage.info ready for SonarCloud."
+
       # 8️⃣ Upload artifacts
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
