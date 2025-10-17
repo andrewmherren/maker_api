@@ -99,6 +99,8 @@ jobs:
           pwd
           ls -l *maker_api*.gcov || true
           grep -Hn "maker_api" $GITHUB_WORKSPACE/.pio/build/test_native/src/*.gcov | head
+          echo "only linked"
+          grep -H "Graph:maker_api.gcno" $GITHUB_WORKSPACE/.pio/build/test_native/src/**/*.gcov || true
 
       # 9️⃣ Run SonarCloud analysis
       - name: Run SonarCloud analysis
