@@ -96,8 +96,9 @@ jobs:
           echo "\nTrying to manually generate maker_api gcov:"
           cd .pio/build/test_native/src
           gcov -b -c maker_api.gcda || true
+          pwd
           ls -l *maker_api*.gcov || true
-          grep -Hn "maker_api" .pio/build/test_native/src/*.gcov | head
+          grep -Hn "maker_api" $GITHUB_WORKSPACE/.pio/build/test_native/src/*.gcov | head
 
       # 9️⃣ Run SonarCloud analysis
       - name: Run SonarCloud analysis
