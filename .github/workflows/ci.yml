@@ -69,9 +69,9 @@ jobs:
           cd .pio/build/test_native
 
           # Generate coverage data with gcov
-          find . -type f -name "*.gcno" -exec gcov --preserve-paths {} \;
+          find . -type f -name "*.gcno" -exec gcov --preserve-paths --source-prefix $GITHUB_WORKSPACE {} \;
 
-          # Generate XML report with exclusions
+          # Generate XML report with exclusions and correct paths
           gcovr --xml-pretty \
             --exclude-directories=".*libdeps.*" \
             --exclude-directories=".*/.pio/.*" \
@@ -81,13 +81,15 @@ jobs:
             --exclude=".*unity.*" \
             --exclude="/usr/include/.*" \
             --exclude=".*c\+\+.*" \
-            -o coverage.xml \
-            -r ../../.. .
+            --root $GITHUB_WORKSPACE \
+            --object-directory . \
+            -o coverage.xml
 
           # Copy coverage files back to workspace root
           cp coverage.xml $GITHUB_WORKSPACE/
           mkdir -p $GITHUB_WORKSPACE/coverage-reports
-          find . -name "*.gcov" -exec cp {} $GITHUB_WORKSPACE/coverage-reports/ \;
+          # Only copy relevant gcov files
+          find . -name "maker_api*.gcov" -exec cp {} $GITHUB_WORKSPACE/coverage-reports/ \;
 
           echo "✅ Coverage generation complete."
 
@@ -124,16 +126,15 @@ jobs:
             -Dsonar.organization=andrewmherren \
             -Dsonar.projectKey=andrewmherren_maker_api \
             -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
-            -Dsonar.sources=./src,./include \
-            -Dsonar.tests=./test \
+            -Dsonar.sources=$GITHUB_WORKSPACE/src,$GITHUB_WORKSPACE/include \
+            -Dsonar.tests=$GITHUB_WORKSPACE/test \
             -Dsonar.exclusions=**/build-wrapper-dump.json \
             -Dsonar.coverage.exclusions=**/test/**/*,**/libdeps/**/*,**/.pio/**/* \
-            -Dsonar.cfamily.compile-commands=./bw-output/compile_commands.json \
-            -Dsonar.cfamily.gcov.reportsPath=./coverage-reports \
-            -Dsonar.cfamily.threads=2 \
-            -Dsonar.cfamily.cache.enabled=false \
+            -Dsonar.cfamily.compile-commands=$GITHUB_WORKSPACE/bw-output/compile_commands.json \
+            -Dsonar.cfamily.gcov.reportsPath=$GITHUB_WORKSPACE/coverage-reports \
+            -Dsonar.cfamily.build-wrapper-output=$GITHUB_WORKSPACE/bw-output \
             -Dsonar.cpp.file.suffixes=.cpp,.h,.hpp \
             -Dsonar.c.file.suffixes=.c \
             -Dsonar.verbose=true \
             -Dsonar.sourceEncoding=UTF-8 \
-            -Dsonar.working.directory=./.scannerwork
+            -Dsonar.working.directory=$GITHUB_WORKSPACE/.scannerwork
