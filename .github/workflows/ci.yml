@@ -68,39 +68,40 @@ jobs:
           echo "Generating coverage data..."
           cd .pio/build/test_native
 
-          # Generate coverage data with gcov
-          find . -type f -name "*.gcno" -exec gcov --preserve-paths {} \;
+          # Generate coverage data with gcov while preserving paths and branch info.
+          # Use a POSIX shell to loop because gcov can produce multiple output files.
+          find . -type f -name "*.gcno" -print0 | xargs -0 -n1 -P4 sh -c 'gcov --preserve-paths --branch-counts --branch-probabilities "$0"' 
 
           # Debug: Show what gcov files were created
           echo "=== Generated gcov files ==="
-          find . -name "*.gcov"
+          find . -name "*.gcov" -ls
 
-          # Generate XML report with exclusions and correct paths
+          # Produce XML report focused on our project sources and excluding system / libdeps
           gcovr --xml-pretty \
+            --filter=".*maker_api.*|.*/src/.*|.*/include/.*" \
             --exclude-directories=".*libdeps.*" \
             --exclude-directories=".*/.pio/.*" \
-            --exclude=".*test/.*" \
             --exclude=".*FakeIt.*" \
             --exclude=".*Arduino.*" \
             --exclude=".*unity.*" \
             --exclude="/usr/include/.*" \
-            --exclude=".*c\+\+.*" \
             --root $GITHUB_WORKSPACE \
             --object-directory . \
             -o coverage.xml \
             --print-summary
 
-          # Copy coverage files back to workspace root
+          # Copy coverage XML back to workspace root (sonar-scanner will read this)
           cp coverage.xml $GITHUB_WORKSPACE/
+
+          # Create coverage-reports and copy only relevant gcov files (project files)
           mkdir -p $GITHUB_WORKSPACE/coverage-reports
+          echo "Copying relevant gcov files..."
+          find . -name "*maker_api*.gcov" -exec cp --parents {} $GITHUB_WORKSPACE/coverage-reports/ \\; || true
+          find . -path "./src/*.gcov" -exec cp --parents {} $GITHUB_WORKSPACE/coverage-reports/ \\; || true
+          find . -path "./include/*.gcov" -exec cp --parents {} $GITHUB_WORKSPACE/coverage-reports/ \\; || true
 
-          # Copy ALL gcov files for debugging
-          echo "Copying gcov files..."
-          find . -name "*.gcov" -exec cp {} $GITHUB_WORKSPACE/coverage-reports/ \;
-
-          # Show what was copied
           echo "=== Contents of coverage-reports ==="
-          ls -la $GITHUB_WORKSPACE/coverage-reports/
+          ls -R $GITHUB_WORKSPACE/coverage-reports || true
 
           echo "✅ Coverage generation complete."
 
@@ -151,15 +152,15 @@ jobs:
             -Dsonar.organization=andrewmherren \
             -Dsonar.projectKey=andrewmherren_maker_api \
             -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
-            -Dsonar.sources=$GITHUB_WORKSPACE/src,$GITHUB_WORKSPACE/include \
-            -Dsonar.tests=$GITHUB_WORKSPACE/test \
+            -Dsonar.sources=src,include \
+            -Dsonar.tests=test \
             -Dsonar.exclusions=**/build-wrapper-dump.json \
             -Dsonar.coverage.exclusions=**/test/**/*,**/libdeps/**/*,**/.pio/**/* \
-            -Dsonar.cfamily.build-wrapper-output=$GITHUB_WORKSPACE/bw-output \
-            -Dsonar.cfamily.gcov.reportsPath=$GITHUB_WORKSPACE/coverage-reports \
-            -Dsonar.cfamily.gcov.xmlReportPaths=$GITHUB_WORKSPACE/coverage.xml \
+            -Dsonar.cfamily.build-wrapper-output=bw-output \
+            -Dsonar.cfamily.gcov.reportsPath=coverage-reports \
+            -Dsonar.cfamily.gcov.xmlReportPaths=coverage.xml \
             -Dsonar.cpp.file.suffixes=.cpp,.h,.hpp \
             -Dsonar.c.file.suffixes=.c \
             -Dsonar.verbose=true \
             -Dsonar.sourceEncoding=UTF-8 \
-            -Dsonar.working.directory=$GITHUB_WORKSPACE/.scannerwork
+            -Dsonar.working.directory=.scannerwork
