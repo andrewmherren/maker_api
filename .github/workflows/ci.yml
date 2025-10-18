@@ -96,9 +96,12 @@ jobs:
           # Create coverage-reports and copy only relevant gcov files (project files)
           mkdir -p $GITHUB_WORKSPACE/coverage-reports
           echo "Copying relevant gcov files..."
-          find . -name "*maker_api*.gcov" -exec cp --parents {} $GITHUB_WORKSPACE/coverage-reports/ \\; || true
-          find . -path "./src/*.gcov" -exec cp --parents {} $GITHUB_WORKSPACE/coverage-reports/ \\; || true
-          find . -path "./include/*.gcov" -exec cp --parents {} $GITHUB_WORKSPACE/coverage-reports/ \\; || true
+          # Use find + tar pipeline to preserve paths in a portable way and avoid shell exec/|| issues
+          # copy maker_api gcov files
+          find . -name "*maker_api*.gcov" -print0 | tar --null -T - -cf - --no-recursion 2>/dev/null | tar -C $GITHUB_WORKSPACE/coverage-reports -xvf - 2>/dev/null || true
+          # copy src and include gcov files (if present)
+          find ./src -name "*.gcov" -print0 | tar --null -T - -cf - --no-recursion 2>/dev/null | tar -C $GITHUB_WORKSPACE/coverage-reports -xvf - 2>/dev/null || true
+          find ./include -name "*.gcov" -print0 | tar --null -T - -cf - --no-recursion 2>/dev/null | tar -C $GITHUB_WORKSPACE/coverage-reports -xvf - 2>/dev/null || true
 
           echo "=== Contents of coverage-reports ==="
           ls -R $GITHUB_WORKSPACE/coverage-reports || true
