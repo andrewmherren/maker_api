@@ -59,9 +59,9 @@ jobs:
       - name: Generate coverage data
         run: |
           echo "Generating coverage data..."
-          cd .pio/build/test_native
-          find . -name "*.gcno" -exec gcov -b -l -p -c {} \;
-          cd $GITHUB_WORKSPACE
+          # cd .pio/build/test_native
+          # find . -name "*.gcno" -exec gcov -b -l -p -c {} \;
+          # cd $GITHUB_WORKSPACE
 
           echo "Generating lcov coverage info..."
           lcov --base-directory . \
@@ -73,9 +73,6 @@ jobs:
           echo "Filtering out system and library files..."
           lcov --remove coverage.info '/usr/*' '.pio/*' --output-file coverage.cleaned.info
 
-          echo "Making SF paths relative for SonarCloud..."
-          sed -i 's|SF:'"$PWD/"'|SF:|g' coverage.cleaned.info
-
           echo "Coverage summary:"
           lcov --summary coverage.cleaned.info
 
@@ -86,7 +83,7 @@ jobs:
           head -n 40 coverage.cleaned.info
 
           echo "📦 Moving final coverage report to workspace root..."
-          mv coverage.cleaned.info coverage.info || true
+          mv coverage.cleaned.info $GITHUB_WORKSPACE/coverage.info || true
 
           ls -l coverage.info
 
@@ -98,6 +95,11 @@ jobs:
         with:
           name: coverage-info
           path: $GITHUB_WORKSPACE/coverage.info
+
+      - name: Fix shallow clone for SonarCloud
+        run: |
+          git fetch --prune --unshallow || true
+          git fetch origin +refs/heads/main:refs/remotes/origin/main || true
 
       # 9️⃣ Run SonarCloud analysis
       - name: Run SonarCloud analysis
