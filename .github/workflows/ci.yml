@@ -69,7 +69,11 @@ jobs:
           cd .pio/build/test_native
 
           # Generate coverage data with gcov
-          find . -type f -name "*.gcno" -exec gcov --preserve-paths --source-prefix $GITHUB_WORKSPACE {} \;
+          find . -type f -name "*.gcno" -exec gcov --preserve-paths {} \;
+
+          # Debug: Show what gcov files were created
+          echo "=== Generated gcov files ==="
+          find . -name "*.gcov"
 
           # Generate XML report with exclusions and correct paths
           gcovr --xml-pretty \
@@ -83,13 +87,20 @@ jobs:
             --exclude=".*c\+\+.*" \
             --root $GITHUB_WORKSPACE \
             --object-directory . \
-            -o coverage.xml
+            -o coverage.xml \
+            --print-summary
 
           # Copy coverage files back to workspace root
           cp coverage.xml $GITHUB_WORKSPACE/
           mkdir -p $GITHUB_WORKSPACE/coverage-reports
-          # Only copy relevant gcov files
-          find . -name "maker_api*.gcov" -exec cp {} $GITHUB_WORKSPACE/coverage-reports/ \;
+
+          # Copy ALL gcov files for debugging
+          echo "Copying gcov files..."
+          find . -name "*.gcov" -exec cp {} $GITHUB_WORKSPACE/coverage-reports/ \;
+
+          # Show what was copied
+          echo "=== Contents of coverage-reports ==="
+          ls -la $GITHUB_WORKSPACE/coverage-reports/
 
           echo "✅ Coverage generation complete."
 
@@ -146,6 +157,7 @@ jobs:
             -Dsonar.coverage.exclusions=**/test/**/*,**/libdeps/**/*,**/.pio/**/* \
             -Dsonar.cfamily.build-wrapper-output=$GITHUB_WORKSPACE/bw-output \
             -Dsonar.cfamily.gcov.reportsPath=$GITHUB_WORKSPACE/coverage-reports \
+            -Dsonar.cfamily.gcov.xmlReportPaths=$GITHUB_WORKSPACE/coverage.xml \
             -Dsonar.cpp.file.suffixes=.cpp,.h,.hpp \
             -Dsonar.c.file.suffixes=.c \
             -Dsonar.verbose=true \
