@@ -82,6 +82,9 @@ jobs:
           pwd
           ls -l coverage.cleaned.info
 
+          echo "head of relative path file..."
+          head -n 40 coverage.cleaned.info
+
           echo "📦 Moving final coverage report to workspace root..."
           mv coverage.cleaned.info coverage.info || true
 
