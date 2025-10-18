@@ -68,19 +68,26 @@ jobs:
           echo "Generating coverage data..."
           cd .pio/build/test_native
 
-          # Debug info
-          echo "Contents of build directory:"
-          ls -R
+          # Generate coverage data with gcov
+          find . -type f -name "*.gcno" -exec gcov --preserve-paths {} \;
 
-          # Process all gcno files recursively
-          find . -type f -name "*.gcno" -exec gcov -b -l -p -c {} \;
+          # Generate XML report with exclusions
+          gcovr --xml-pretty \
+            --exclude-directories=".*libdeps.*" \
+            --exclude-directories=".*/.pio/.*" \
+            --exclude=".*test/.*" \
+            --exclude=".*FakeIt.*" \
+            --exclude=".*Arduino.*" \
+            --exclude=".*unity.*" \
+            --exclude="/usr/include/.*" \
+            --exclude=".*c\+\+.*" \
+            -o coverage.xml \
+            -r ../../.. .
 
-          # Generate XML report using gcovr
-          gcovr --xml-pretty --exclude-unreachable-branches --print-summary -o coverage.xml -r ../../.. .
-
-          # Move coverage files to workspace root
+          # Copy coverage files back to workspace root
           cp coverage.xml $GITHUB_WORKSPACE/
-          cp *.gcov $GITHUB_WORKSPACE/
+          mkdir -p $GITHUB_WORKSPACE/coverage-reports
+          find . -name "*.gcov" -exec cp {} $GITHUB_WORKSPACE/coverage-reports/ \;
 
           echo "✅ Coverage generation complete."
 
@@ -120,14 +127,13 @@ jobs:
             -Dsonar.sources=./src,./include \
             -Dsonar.tests=./test \
             -Dsonar.exclusions=**/build-wrapper-dump.json \
-            -Dsonar.coverage.exclusions=**/test/**/* \
+            -Dsonar.coverage.exclusions=**/test/**/*,**/libdeps/**/*,**/.pio/**/* \
             -Dsonar.cfamily.compile-commands=./bw-output/compile_commands.json \
-            -Dsonar.cfamily.gcov.reportsPath=. \
+            -Dsonar.cfamily.gcov.reportsPath=./coverage-reports \
             -Dsonar.cfamily.threads=2 \
             -Dsonar.cfamily.cache.enabled=false \
             -Dsonar.cpp.file.suffixes=.cpp,.h,.hpp \
             -Dsonar.c.file.suffixes=.c \
-            -Dsonar.lang.patterns.cpp=**/*.cpp,**/*.h,**/*.hpp \
-            -Dsonar.lang.patterns.c=**/*.c \
+            -Dsonar.verbose=true \
             -Dsonar.sourceEncoding=UTF-8 \
-            -Dsonar.verbose=true
+            -Dsonar.working.directory=./.scannerwork
