@@ -99,6 +99,20 @@ jobs:
           git fetch --prune --unshallow || true
           git fetch origin +refs/heads/main:refs/remotes/origin/main || true
 
+      - name: Debug Coverage
+        run: |
+          echo "=== Checking coverage files existence ==="
+          ls -l $GITHUB_WORKSPACE/coverage-reports/
+
+          echo "=== Checking coverage file contents ==="
+          head -n 20 $GITHUB_WORKSPACE/coverage-reports/*.gcov || true
+
+          echo "=== Checking coverage XML ==="
+          head -n 20 $GITHUB_WORKSPACE/coverage.xml || true
+
+          echo "=== Checking build wrapper output ==="
+          ls -l $GITHUB_WORKSPACE/bw-output/
+
       # 9️⃣ Run SonarCloud analysis
       - name: Run SonarCloud analysis
         run: |
