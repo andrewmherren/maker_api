@@ -68,7 +68,7 @@ jobs:
               --directory .pio/build/test_native \
               --capture \
               --output-file coverage.info \
-              --rc lcov_branch_coverage=1
+              --rc lcov_branch_coverage=1 \
               --path-adjustment "/home/runner/work/maker_api/maker_api/."
 
           echo "Filtering out system and library files..."
