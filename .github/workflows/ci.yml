@@ -70,38 +70,40 @@ jobs:
               --output-file coverage.info \
               --rc lcov_branch_coverage=1 
 
-          echo "Filtering out system and library files..."
-          lcov --remove coverage.info '/usr/*' '.pio/*' --output-file coverage.cleaned.info
+          gcovr -r . --xml-pretty -o coverage.xml
 
-          echo "head of absolute path file..."
-          head -n 40 coverage.cleaned.info
+          # echo "Filtering out system and library files..."
+          # lcov --remove coverage.info '/usr/*' '.pio/*' --output-file coverage.cleaned.info
 
-          echo "Converting absolute paths to relative paths..."
-          sed -i 's|SF:.*/src/|SF:src/|' coverage.cleaned.info
-          sed -i 's|SF:.*/include/|SF:include/|' coverage.cleaned.info
+          # echo "head of absolute path file..."
+          # head -n 40 coverage.cleaned.info
 
-          echo "Coverage summary:"
-          lcov --summary coverage.cleaned.info
+          # echo "Converting absolute paths to relative paths..."
+          # sed -i 's|SF:.*/src/|SF:src/|' coverage.cleaned.info
+          # sed -i 's|SF:.*/include/|SF:include/|' coverage.cleaned.info
 
-          pwd
-          ls -l coverage.cleaned.info
+          # echo "Coverage summary:"
+          # lcov --summary coverage.cleaned.info
 
-          echo "head of relative path file..."
-          head -n 40 coverage.cleaned.info
+          # pwd
+          # ls -l coverage.cleaned.info
 
-          echo "📦 Moving final coverage report to workspace root..."
-          mv coverage.cleaned.info coverage.info || true
+          # echo "head of relative path file..."
+          # head -n 40 coverage.cleaned.info
 
-          ls -l coverage.info
+          # echo "📦 Moving final coverage report to workspace root..."
+          # mv coverage.cleaned.info coverage.info || true
+
+          # ls -l coverage.info
 
           echo "✅ Coverage generation complete. coverage.info ready for SonarCloud."
 
-      # 8️⃣ Upload artifacts
-      - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-info
-          path: coverage.info
+      # # 8️⃣ Upload artifacts
+      # - name: Upload coverage artifacts
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: coverage-info
+      #     path: coverage.info
 
       - name: Fix shallow clone for SonarCloud
         run: |
@@ -122,7 +124,8 @@ jobs:
             -Dsonar.exclusions=**/build-wrapper-dump.json \
             -Dsonar.coverage.exclusions=**/test/**/* \
             -Dsonar.cfamily.compile-commands=$GITHUB_WORKSPACE/bw-output/compile_commands.json \
-            -Dsonar.cfamily.gcov.reportsPath=$GITHUB_WORKSPACE \
+            # -Dsonar.cfamily.gcov.reportsPath=$GITHUB_WORKSPACE \
+            -Dsonar.cfamily.gcov.xmlReportPaths=$GITHUB_WORKSPACE/coverage.xml \
             -Dsonar.cpp.file.suffixes=.cpp,.h,.hpp \
             -Dsonar.c.file.suffixes=.c \
             -Dsonar.lang.patterns.cpp=**/*.cpp,**/*.h,**/*.hpp \
