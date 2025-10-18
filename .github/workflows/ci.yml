@@ -1,0 +1,95 @@
+name: SonarCloud Analysis
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  sonar:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout the repo
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2️⃣ Setup Python & PlatformIO
+      - name: Setup Python & PlatformIO
+        run: |
+          sudo apt update
+          sudo apt install -y gcc g++ make python3-pip lcov unzip wget
+          pip3 install platformio
+
+      # 3️⃣ Debug: Show starting directory
+      - name: Debug starting directory
+        run: |
+          echo "PWD = $PWD"
+          ls -R .
+
+      # 4️⃣ Setup SonarScanner
+      - name: Setup SonarScanner
+        run: |
+          wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+          unzip sonar-scanner-cli-5.0.1.3006-linux.zip
+          echo "$PWD/sonar-scanner-5.0.1.3006-linux/bin" >> $GITHUB_PATH
+
+      # 5️⃣ Setup Build Wrapper
+      - name: Setup Build Wrapper
+        run: |
+          mkdir -p build-tools
+          cd build-tools
+          wget https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
+          unzip build-wrapper-linux-x86.zip
+          chmod +x build-wrapper-linux-x86/build-wrapper-linux-x86-64
+          echo "BUILD_WRAPPER_PATH=$PWD/build-wrapper-linux-x86/build-wrapper-linux-x86-64" >> $GITHUB_ENV
+          cd $GITHUB_WORKSPACE
+
+      # 6️⃣ Run PlatformIO build & tests with build-wrapper
+      - name: Build and test with build-wrapper
+        run: |
+          mkdir -p bw-output
+          echo "Running PlatformIO tests..."
+          $BUILD_WRAPPER_PATH --out-dir bw-output pio test -e test_native
+
+      # 7️⃣ Generate C++ coverage data
+      - name: Generate coverage data
+        run: |
+          echo "Generating coverage data..."
+          # cd .pio/build/test_native
+          find .pio/build/test_native/src -name "*.gcno" -exec gcov -b -l -p -c {} \;
+          find .pio/build/test_native/include -name "*.gcno" -exec gcov -b -l -p -c {} \;
+
+          echo "✅ Coverage generation complete."
+
+      # 8️⃣ git checkout main to fix shallow clone issues
+      - name: Fix shallow clone for SonarCloud
+        run: |
+          git fetch --prune --unshallow || true
+          git fetch origin +refs/heads/main:refs/remotes/origin/main || true
+
+      # 9️⃣ Run SonarCloud analysis
+      - name: Run SonarCloud analysis
+        run: |
+          echo "Running sonar-scanner..."
+          sonar-scanner \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.organization=andrewmherren \
+            -Dsonar.projectKey=andrewmherren_maker_api \
+            -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.sources=$GITHUB_WORKSPACE/src,$GITHUB_WORKSPACE/include \
+            -Dsonar.tests=$GITHUB_WORKSPACE/test \
+            -Dsonar.exclusions=**/build-wrapper-dump.json \
+            -Dsonar.coverage.exclusions=**/test/**/* \
+            -Dsonar.cfamily.compile-commands=$GITHUB_WORKSPACE/bw-output/compile_commands.json \
+            -Dsonar.cfamily.gcov.reportsPath=$GITHUB_WORKSPACE \
+            -Dsonar.cfamily.gcov.xmlReportPaths=$GITHUB_WORKSPACE/coverage.xml \
+            -Dsonar.cpp.file.suffixes=.cpp,.h,.hpp \
+            -Dsonar.c.file.suffixes=.c \
+            -Dsonar.lang.patterns.cpp=**/*.cpp,**/*.h,**/*.hpp \
+            -Dsonar.lang.patterns.c=**/*.c \
+            -Dsonar.sourceEncoding=UTF-8 \
+            -Dsonar.working.directory=$GITHUB_WORKSPACE/.scannerwork
