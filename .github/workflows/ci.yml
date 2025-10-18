@@ -77,7 +77,8 @@ jobs:
           head -n 40 coverage.cleaned.info
 
           echo "Converting absolute paths to relative paths..."
-          sed -i -E 's|SF:.*/(src/|include/)|SF:\1|' coverage.cleaned.info
+          sed -i 's|SF:.*/src/|SF:src/|' coverage.cleaned.info
+          sed -i 's|SF:.*/include/|SF:include/|' coverage.cleaned.info
 
           echo "Coverage summary:"
           lcov --summary coverage.cleaned.info
