@@ -79,8 +79,13 @@ jobs:
           echo "Coverage summary:"
           lcov --summary coverage.cleaned.info
 
+          pwd
+          ls -l coverage.cleaned.info
+
           echo "📦 Moving final coverage report to workspace root..."
           mv coverage.cleaned.info coverage.info || true
+
+          ls -l coverage.info
 
           echo "✅ Coverage generation complete. coverage.info ready for SonarCloud."
 
