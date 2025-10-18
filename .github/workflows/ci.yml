@@ -130,9 +130,8 @@ jobs:
             -Dsonar.tests=$GITHUB_WORKSPACE/test \
             -Dsonar.exclusions=**/build-wrapper-dump.json \
             -Dsonar.coverage.exclusions=**/test/**/*,**/libdeps/**/*,**/.pio/**/* \
-            -Dsonar.cfamily.compile-commands=$GITHUB_WORKSPACE/bw-output/compile_commands.json \
-            -Dsonar.cfamily.gcov.reportsPath=$GITHUB_WORKSPACE/coverage-reports \
             -Dsonar.cfamily.build-wrapper-output=$GITHUB_WORKSPACE/bw-output \
+            -Dsonar.cfamily.gcov.reportsPath=$GITHUB_WORKSPACE/coverage-reports \
             -Dsonar.cpp.file.suffixes=.cpp,.h,.hpp \
             -Dsonar.c.file.suffixes=.c \
             -Dsonar.verbose=true \
