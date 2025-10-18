@@ -73,14 +73,14 @@ jobs:
           echo "Filtering system files..."
           lcov --remove coverage.info '/usr/*' --output-file coverage.cleaned.info
 
-          echo "tail of cleaned file..."
-          tail -n 40 coverage.cleaned.info
+          echo "head of cleaned file..."
+          head -n 40 coverage.cleaned.info
 
           echo "Making SF paths relative for SonarCloud..."
           sed -i 's|SF:'"$PWD/"'|SF:|g' coverage.cleaned.info
 
-          echo "tail of relative path file..."
-          tail -n 40 coverage.cleaned.info
+          echo "head of relative path file..."
+          head -n 40 coverage.cleaned.info
 
           echo "Coverage summary:"
           lcov --summary coverage.cleaned.info
