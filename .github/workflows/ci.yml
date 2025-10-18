@@ -60,17 +60,17 @@ jobs:
         run: |
           echo "Generating coverage data..."
           # cd .pio/build/test_native
-          # find . -name "*.gcno" -exec gcov -b -l -p -c {} \;
+          find . -name "*.gcno" -exec gcov -b -l -p -c {} \;
           # cd $GITHUB_WORKSPACE
 
-          echo "Generating lcov coverage info..."
-          lcov --base-directory . \
-              --directory .pio/build/test_native \
-              --capture \
-              --output-file coverage.info \
-              --rc lcov_branch_coverage=1 
+          # echo "Generating lcov coverage info..."
+          # lcov --base-directory . \
+          #     --directory .pio/build/test_native \
+          #     --capture \
+          #     --output-file coverage.info \
+          #     --rc lcov_branch_coverage=1 
 
-          gcovr -r . --xml-pretty -o coverage.xml
+          # gcovr -r . --xml-pretty -o coverage.xml
 
           # echo "Filtering out system and library files..."
           # lcov --remove coverage.info '/usr/*' '.pio/*' --output-file coverage.cleaned.info
@@ -124,7 +124,7 @@ jobs:
             -Dsonar.exclusions=**/build-wrapper-dump.json \
             -Dsonar.coverage.exclusions=**/test/**/* \
             -Dsonar.cfamily.compile-commands=$GITHUB_WORKSPACE/bw-output/compile_commands.json \
-            # -Dsonar.cfamily.gcov.reportsPath=$GITHUB_WORKSPACE \
+            -Dsonar.cfamily.gcov.reportsPath=$GITHUB_WORKSPACE \
             -Dsonar.cfamily.gcov.xmlReportPaths=$GITHUB_WORKSPACE/coverage.xml \
             -Dsonar.cpp.file.suffixes=.cpp,.h,.hpp \
             -Dsonar.c.file.suffixes=.c \
