@@ -70,17 +70,11 @@ jobs:
               --output-file coverage.info \
               --rc lcov_branch_coverage=1
 
-          echo "Filtering system files..."
-          lcov --remove coverage.info '/usr/*' --output-file coverage.cleaned.info
-
-          echo "head of cleaned file..."
-          head -n 40 coverage.cleaned.info
+          echo "Filtering out system and library files..."
+          lcov --remove coverage.info '/usr/*' '.pio/*' --output-file coverage.cleaned.info
 
           echo "Making SF paths relative for SonarCloud..."
           sed -i 's|SF:'"$PWD/"'|SF:|g' coverage.cleaned.info
-
-          echo "head of relative path file..."
-          head -n 40 coverage.cleaned.info
 
           echo "Coverage summary:"
           lcov --summary coverage.cleaned.info
