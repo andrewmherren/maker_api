@@ -91,8 +91,8 @@ jobs:
             --print-summary
 
           # Copy coverage XML back to workspace root (sonar-scanner will read this)
-          ls -l coverage.xml
-          cp coverage.xml $GITHUB_WORKSPACE/
+          # ls -l coverage.xml
+          # cp coverage.xml $GITHUB_WORKSPACE/
 
           # Create coverage-reports and copy only relevant gcov files (project files)
           mkdir -p $GITHUB_WORKSPACE/coverage-reports
