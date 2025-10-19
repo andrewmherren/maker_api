@@ -63,14 +63,14 @@ jobs:
           find .pio/build/test_native/src -name "*.gcno" -exec gcov -b -l -p -c {} \;
 
           echo "✅ Coverage generation complete."
-      # - name: Generate coverage data
-      #   run: |
-      #     echo "Generating coverage data..."
-      #     cd .pio/build/test_native
+          # - name: Generate coverage data
+          #   run: |
+          #     echo "Generating coverage data..."
+          #     cd .pio/build/test_native
 
-      #     # Generate coverage data with gcov while preserving paths and branch info.
-      #     # Use a POSIX shell to loop because gcov can produce multiple output files.
-      #     find . -type f -name "*.gcno" -print0 | xargs -0 -n1 -P4 sh -c 'gcov --preserve-paths --branch-counts --branch-probabilities "$0"' 
+          #     # Generate coverage data with gcov while preserving paths and branch info.
+          #     # Use a POSIX shell to loop because gcov can produce multiple output files.
+          #     find . -type f -name "*.gcno" -print0 | xargs -0 -n1 -P4 sh -c 'gcov --preserve-paths --branch-counts --branch-probabilities "$0"' 
 
           # Debug: Show what gcov files were created
           echo "=== Generated gcov files ==="
