@@ -24,12 +24,6 @@ jobs:
           sudo apt install -y gcc g++ make python3-pip lcov unzip wget gcovr
           pip3 install platformio
 
-      # 3️⃣ Debug: Show starting directory
-      - name: Debug starting directory
-        run: |
-          echo "PWD = $PWD"
-          ls -R .
-
       # 4️⃣ Setup SonarScanner
       - name: Setup SonarScanner
         run: |
@@ -86,16 +80,6 @@ jobs:
             --print-summary
 
           echo "✅ Coverage XML report generated."
-
-      - name: Debug Show coverage.xml location and contents
-        run: |
-          echo "PWD = $PWD"
-          ls -l coverage.xml
-          head -n 50 coverage.xml
-
-      - name: Debug Show repo file tree
-        run: |
-          find . -type f | grep maker_api.cpp
 
       # 8️⃣ Upload artifacts
       - name: Upload coverage artifacts
