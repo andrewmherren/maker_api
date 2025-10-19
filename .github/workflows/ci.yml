@@ -13,25 +13,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout the repo
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2️⃣ Setup Python & PlatformIO
       - name: Setup Python & PlatformIO
         run: |
           sudo apt update
           sudo apt install -y gcc g++ make python3-pip lcov unzip wget gcovr
           pip3 install platformio
 
-      # 4️⃣ Setup SonarScanner
       - name: Setup SonarScanner
         run: |
           wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
           unzip sonar-scanner-cli-5.0.1.3006-linux.zip
           echo "$PWD/sonar-scanner-5.0.1.3006-linux/bin" >> $GITHUB_PATH
 
-      # 5️⃣ Setup Build Wrapper
       - name: Setup Build Wrapper
         run: |
           mkdir -p build-tools
@@ -42,31 +38,18 @@ jobs:
           echo "BUILD_WRAPPER_PATH=$PWD/build-wrapper-linux-x86/build-wrapper-linux-x86-64" >> $GITHUB_ENV
           cd $GITHUB_WORKSPACE
 
-      # 6️⃣ Run PlatformIO build & tests with build-wrapper
       - name: Build and test with build-wrapper
         run: |
           mkdir -p bw-output
-          echo "Running PlatformIO tests..."
-          $BUILD_WRAPPER_PATH --out-dir bw-output pio test -e test_native
+          $BUILD_WRAPPER_PATH --out-dir bw-output pio test -e test_native --junit-output test-results/results.xml
 
-      # 7️⃣ Generate C++ coverage data
       - name: Generate coverage data
         run: |
-          echo "Generating coverage data..."
-          # Clean up any previous .gcov files
+          # Remove previous .gcov files
           find . -name "*.gcov" -delete
-
-          # Run gcov from the repo root, not the build dir
-          cd $GITHUB_WORKSPACE
-
-          # Generate .gcov files in the source tree for all .gcno files
+          # Run gcov from repo root for all .gcno files
           find .pio/build/test_native -name "*.gcno" -exec gcov -b -l -p -c {} \;
-
-          echo "✅ Coverage generation complete."
-          echo "=== Generated gcov files ==="
-          find . -name "*.gcov" -ls
-
-          # Use gcovr to generate XML report with correct root and object directory
+          # Generate coverage.xml for src and include
           gcovr --xml-pretty \
             --root $GITHUB_WORKSPACE \
             --object-directory .pio/build/test_native \
@@ -79,25 +62,17 @@ jobs:
             -o coverage.xml \
             --print-summary
 
-          echo "✅ Coverage XML report generated."
-
-      # 8️⃣ Upload artifacts
-      - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage.xml
-          path: coverage.xml
-
-      # 8️⃣ git checkout main to fix shallow clone issues
       - name: Fix shallow clone for SonarCloud
         run: |
           git fetch --prune --unshallow || true
           git fetch origin +refs/heads/main:refs/remotes/origin/main || true
 
+      - name: SonarCloud Scan
+        run: |
           sonar-scanner \
             -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.organization=andrewmherren \
-            -Dsonar.projectKey=andrewmherren_maker_api \
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} \
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
             -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
             -Dsonar.sources=src,include \
             -Dsonar.tests=test \
@@ -111,3 +86,18 @@ jobs:
             -Dsonar.verbose=false \
             -Dsonar.sourceEncoding=UTF-8 \
             -Dsonar.working.directory=.scannerwork
+
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: PlatformIO Tests
+          path: test-results/results.xml
+          reporter: java-junit
+
+      # Optional: Upload coverage.xml as an artifact for debugging
+      # - name: Upload coverage report
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: coverage-report
+      #     path: coverage.xml
