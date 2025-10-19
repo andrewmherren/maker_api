@@ -59,33 +59,40 @@ jobs:
       - name: Generate coverage data
         run: |
           echo "Generating coverage data..."
-          ls -l .pio/build/test_native
-          find .pio/build/test_native/src -name "*.gcno" -exec gcov -b -l -p -c {} \;
+          # Clean up any previous .gcov files
+          find . -name "*.gcov" -delete
+
+          # Run gcov from the repo root, not the build dir
+          cd $GITHUB_WORKSPACE/maker_api
+
+          # Generate .gcov files in the source tree for all .gcno files
+          find .pio/build/test_native -name "*.gcno" -exec gcov -b -l -p -c {} \;
 
           echo "✅ Coverage generation complete."
           echo "=== Generated gcov files ==="
           find . -name "*.gcov" -ls
 
-          # Produce XML report focused on our project sources and excluding system / libdeps
-          # --exclude-directories=".*/.pio/.*" \
+          # Use gcovr to generate XML report with correct root and object directory
           gcovr --xml-pretty \
-            --filter=".*maker_api.*|.*/src/.*|.*/include/.*" \
-            --exclude-directories=".*libdeps.*" \
-            --exclude=".*FakeIt.*" \
-            --exclude=".*Arduino.*" \
-            --exclude=".*unity.*" \
-            --exclude="/usr/include/.*" \
-            --root $GITHUB_WORKSPACE \
+            --root $GITHUB_WORKSPACE/maker_api \
             --object-directory .pio/build/test_native \
+            --filter "src|include" \
+            --exclude-directories ".*libdeps.*" \
+            --exclude ".*FakeIt.*" \
+            --exclude ".*Arduino.*" \
+            --exclude ".*unity.*" \
+            --exclude "/usr/include/.*" \
             -o coverage.xml \
             --print-summary
 
-          echo "✅ Coverage generation complete."
+          echo "✅ Coverage XML report generated."
 
-          ls -l .pio/build/test_native
-          ls -l .pio/build/test_native/src
-          ls -l .pio/build/test_native/src/maker_api.gcno
-          tail -n 50 .pio/build/test_native/src/maker_api.cpp.gcov || true
+      # 8️⃣ Upload artifacts
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-info
+          path: $GITHUB_WORKSPACE/coverage.xml
 
       # 8️⃣ git checkout main to fix shallow clone issues
       - name: Fix shallow clone for SonarCloud
