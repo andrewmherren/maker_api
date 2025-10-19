@@ -55,42 +55,43 @@ jobs:
           echo "Running PlatformIO tests..."
           $BUILD_WRAPPER_PATH --out-dir bw-output pio test -e test_native
 
-      # 7️⃣ Generate C++ coverage data
-      # - name: Generate coverage data
-      #   run: |
-      #     echo "Generating coverage data..."
-      #     ls -l .pio/build/test_native
-      #     find .pio/build/test_native/src -name "*.gcno" -exec gcov -b -l -p -c {} \;
-
-      #     echo "✅ Coverage generation complete."
+      7️⃣ Generate C++ coverage data
       - name: Generate coverage data
         run: |
           echo "Generating coverage data..."
-          cd .pio/build/test_native
+          ls -l .pio/build/test_native
+          find .pio/build/test_native/src -name "*.gcno" -exec gcov -b -l -p -c {} \;
 
-          # Generate coverage data with gcov while preserving paths and branch info.
-          # Use a POSIX shell to loop because gcov can produce multiple output files.
-          find . -type f -name "*.gcno" -print0 | xargs -0 -n1 -P4 sh -c 'gcov --preserve-paths --branch-counts --branch-probabilities "$0"' 
+          echo "✅ Coverage generation complete."
+      # - name: Generate coverage data
+      #   run: |
+      #     echo "Generating coverage data..."
+      #     cd .pio/build/test_native
+
+      #     # Generate coverage data with gcov while preserving paths and branch info.
+      #     # Use a POSIX shell to loop because gcov can produce multiple output files.
+      #     find . -type f -name "*.gcno" -print0 | xargs -0 -n1 -P4 sh -c 'gcov --preserve-paths --branch-counts --branch-probabilities "$0"' 
 
           # Debug: Show what gcov files were created
           echo "=== Generated gcov files ==="
           find . -name "*.gcov" -ls
 
           # Produce XML report focused on our project sources and excluding system / libdeps
+          # --exclude-directories=".*/.pio/.*" \
           gcovr --xml-pretty \
             --filter=".*maker_api.*|.*/src/.*|.*/include/.*" \
             --exclude-directories=".*libdeps.*" \
-            --exclude-directories=".*/.pio/.*" \
             --exclude=".*FakeIt.*" \
             --exclude=".*Arduino.*" \
             --exclude=".*unity.*" \
             --exclude="/usr/include/.*" \
             --root $GITHUB_WORKSPACE \
-            --object-directory . \
+            --object-directory .pio/build/test_native \
             -o coverage.xml \
             --print-summary
 
           # Copy coverage XML back to workspace root (sonar-scanner will read this)
+          ls -l coverage.xml
           cp coverage.xml $GITHUB_WORKSPACE/
 
           # Create coverage-reports and copy only relevant gcov files (project files)
