@@ -74,7 +74,7 @@ jobs:
 
           # Use gcovr to generate XML report with correct root and object directory
           gcovr --xml-pretty \
-            --root $GITHUB_WORKSPACE/maker_api \
+            --root $GITHUB_WORKSPACE \
             --object-directory .pio/build/test_native \
             --filter "src|include" \
             --exclude-directories ".*libdeps.*" \
