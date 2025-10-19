@@ -63,7 +63,7 @@ jobs:
           find . -name "*.gcov" -delete
 
           # Run gcov from the repo root, not the build dir
-          cd $GITHUB_WORKSPACE/maker_api
+          cd $GITHUB_WORKSPACE
 
           # Generate .gcov files in the source tree for all .gcno files
           find .pio/build/test_native -name "*.gcno" -exec gcov -b -l -p -c {} \;
