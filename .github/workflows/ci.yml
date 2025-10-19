@@ -159,12 +159,12 @@ jobs:
             -Dsonar.sources=src,include \
             -Dsonar.tests=test \
             -Dsonar.exclusions=**/build-wrapper-dump.json \
-            -Dsonar.coverage.exclusions=**/test/**/*,**/libdeps/**/*,**/.pio/**/* \
+            -Dsonar.coverage.exclusions=**/test/**/*,**/libdeps/**/* \ #,**/.pio/**/* \
             -Dsonar.cfamily.build-wrapper-output=bw-output \
-            -Dsonar.cfamily.gcov.reportsPath=./pio/build/test_native \
+            -Dsonar.cfamily.gcov.reportsPath=. \
             -Dsonar.cfamily.gcov.xmlReportPaths=coverage.xml \
             -Dsonar.cpp.file.suffixes=.cpp,.h,.hpp \
             -Dsonar.c.file.suffixes=.c \
-            -Dsonar.verbose=true \
+            -Dsonar.verbose=false \
             -Dsonar.sourceEncoding=UTF-8 \
             -Dsonar.working.directory=.scannerwork
