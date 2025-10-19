@@ -55,7 +55,7 @@ jobs:
           echo "Running PlatformIO tests..."
           $BUILD_WRAPPER_PATH --out-dir bw-output pio test -e test_native
 
-      #7️⃣ Generate C++ coverage data
+      # 7️⃣ Generate C++ coverage data
       - name: Generate coverage data
         run: |
           echo "Generating coverage data..."
