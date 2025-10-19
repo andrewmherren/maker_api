@@ -87,12 +87,21 @@ jobs:
 
           echo "✅ Coverage XML report generated."
 
+      - name: Debug
+        run: |
+          echo "=== coverage.xml contents ==="
+          head -n 20 coverage.xml
+          pwd
+          ls -l
+          echo $GiTHUB_WORKSPACE 
+          ls -l $GITHUB_WORKSPACE
+
       # 8️⃣ Upload artifacts
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-info
-          path: $GITHUB_WORKSPACE/coverage.xml
+          name: coverage.xml
+          path: coverage.xml
 
       # 8️⃣ git checkout main to fix shallow clone issues
       - name: Fix shallow clone for SonarCloud
