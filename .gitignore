@@ -30,6 +30,7 @@ Thumbs.db
 *.swp
 *.swo
 *~
+.cache
 
 # Log files
 *.log
@@ -50,8 +51,8 @@ bin/
 obj/
 
 # Custom
-lib/*
 src/server_*.pem
 src/server_*.der
 LOCAL_*
 .continue/
+compile_commands.json
