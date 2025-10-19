@@ -87,14 +87,15 @@ jobs:
 
           echo "✅ Coverage XML report generated."
 
-      - name: Debug
+      - name: Debug Show coverage.xml location and contents
         run: |
-          echo "=== coverage.xml contents ==="
-          head -n 20 coverage.xml
-          pwd
-          ls -l
-          echo $GiTHUB_WORKSPACE 
-          ls -l $GITHUB_WORKSPACE
+          echo "PWD = $PWD"
+          ls -l coverage.xml
+          head -n 50 coverage.xml
+
+      - name: Debug Show repo file tree
+        run: |
+          find . -type f | grep maker_api.cpp
 
       # 8️⃣ Upload artifacts
       - name: Upload coverage artifacts
