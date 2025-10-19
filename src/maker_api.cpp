@@ -11,7 +11,9 @@
 #include "../assets/maker_api_utils_js.h"
 
 // Global instance of MakerAPIModule
-MakerAPIModule makerAPI;
+// NOSONAR - This module instance must be mutable as it maintains state and
+// implements lifecycle methods
+MakerAPIModule makerAPI; // NOSONAR
 
 MakerAPIModule::MakerAPIModule() : platformProvider(nullptr) {
 #ifndef MAKER_API_STANDALONE_TEST
@@ -33,7 +35,7 @@ void MakerAPIModule::handle() {
   // Nothing to do in regular processing
 }
 
-OpenAPIDocumentation MakerAPIModule::getOpenAPIConfigDocs() {
+OpenAPIDocumentation MakerAPIModule::getOpenAPIConfigDocs() const {
   return OpenAPIFactory::create("Get OpenAPI configuration",
                                 "Retrieves a system information about the "
                                 "availability of OpenAPI information.",
@@ -50,7 +52,7 @@ OpenAPIDocumentation MakerAPIModule::getOpenAPIConfigDocs() {
 }
 
 void MakerAPIModule::getOpenAPIConfigHandler(WebRequest &req,
-                                             WebResponse &res) {
+                                             WebResponse &res) const {
 
   bool fullSpec = false;
   bool makerSpec = false;
@@ -63,13 +65,17 @@ void MakerAPIModule::getOpenAPIConfigHandler(WebRequest &req,
 #endif
 
   // Use JsonResponseBuilder for simple response
-  getPlatform().createJsonResponse(res, [&](JsonObject &root) {
-    root["success"] = true;
+  getPlatform().createJsonResponse(
+      res,
+      [fullSpec, makerSpec](
+          JsonObject &root) { // NOSONAR - JsonObject must be non-const as we're
+                              // modifying it by adding key-value pairs
+        root["success"] = true;
 
-    JsonObject config = root["OpenApiConfig"].to<JsonObject>();
-    config["fullSpec"] = fullSpec;
-    config["makerSpec"] = makerSpec;
-  });
+        JsonObject config = root["OpenApiConfig"].to<JsonObject>();
+        config["fullSpec"] = fullSpec;
+        config["makerSpec"] = makerSpec;
+      });
 }
 
 std::vector<RouteVariant> MakerAPIModule::getHttpRoutes() {
@@ -77,7 +83,7 @@ std::vector<RouteVariant> MakerAPIModule::getHttpRoutes() {
 
   // Main dashboard routes
   routes.push_back(WebRoute("/", WebModule::WM_GET,
-                            [this](WebRequest &req, WebResponse &res) {
+                            [](WebRequest &, WebResponse &res) {
                               res.setProgmemContent(MAKER_API_DASHBOARD_HTML,
                                                     "text/html");
                             },
@@ -86,7 +92,7 @@ std::vector<RouteVariant> MakerAPIModule::getHttpRoutes() {
   // Static assets
   routes.push_back(
       WebRoute("/assets/maker-api-style.css", WebModule::WM_GET,
-               [this](WebRequest &req, WebResponse &res) {
+               [](WebRequest &, WebResponse &res) {
                  res.setProgmemContent(MAKER_API_STYLES_CSS, "text/css");
                  res.setHeader("Cache-Control", "public, max-age=3600");
                },
@@ -94,7 +100,7 @@ std::vector<RouteVariant> MakerAPIModule::getHttpRoutes() {
 
   routes.push_back(
       WebRoute("/assets/maker-api-utils.js", WebModule::WM_GET,
-               [this](WebRequest &req, WebResponse &res) {
+               [](WebRequest &, WebResponse &res) {
                  res.setProgmemContent(MAKER_API_UTILS_JS,
                                        "application/javascript; charset=utf-8");
                  res.setHeader("Cache-Control", "public, max-age=3600");

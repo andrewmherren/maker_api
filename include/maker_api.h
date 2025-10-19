@@ -15,11 +15,12 @@ public:
   MakerAPIModule();
 
   // Optional constructor for dependency injection (tests)
-  MakerAPIModule(IWebPlatformProvider *provider);
+  explicit MakerAPIModule(IWebPlatformProvider *provider);
 
-  ~MakerAPIModule();
+  ~MakerAPIModule() override;
 
   // Module lifecycle
+  using IWebModule::begin; // Bring base class overloads into scope
   void begin() override;
   void handle() override;
 
@@ -32,7 +33,7 @@ public:
     return "API documentation and testing interface for makers";
   }
 
-  OpenAPIDocumentation getOpenAPIConfigDocs();
+  OpenAPIDocumentation getOpenAPIConfigDocs() const;
 
 private:
   // Platform provider (injected or global)
@@ -42,10 +43,12 @@ private:
   IWebPlatform &getPlatform() const { return platformProvider->getPlatform(); }
 
   // Internal handler
-  void getOpenAPIConfigHandler(WebRequest &req, WebResponse &res);
+  void getOpenAPIConfigHandler(WebRequest &req, WebResponse &res) const;
 };
 
 // Global instance for production builds
-extern MakerAPIModule makerAPI;
+// NOSONAR - This module instance must be mutable as it maintains state and
+// implements lifecycle methods
+extern MakerAPIModule makerAPI; // NOSONAR
 
 #endif // MAKER_API_H

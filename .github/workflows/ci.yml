@@ -1,3 +1,7 @@
+# Pre-requisites:
+# - In repository settings -> Security -> Secrets and variables -> Actions:
+#    - Add SONAR_TOKEN secret with your SonarCloud token
+#    - Add SONAR_ORGANIZATION and SONAR_PROJECT_KEY as Variables
 name: SonarCloud Analysis
 
 on:
@@ -94,24 +98,6 @@ jobs:
             -Dsonar.sourceEncoding=UTF-8 \
             -Dsonar.working.directory=.scannerwork
 
-      # - name: Post test summary as PR comment
-      #   uses: actions/github-script@v7
-      #   if: always()
-      #   with:
-      #     script: |
-      #       const fs = require('fs');
-      #       let summary = 'Test Results:\n';
-      #       try {
-      #         summary += fs.readFileSync('test-results/results.xml', 'utf8').slice(0, 2000);
-      #       } catch (e) {
-      #         summary += 'Could not read test results.';
-      #       }
-      #       github.rest.issues.createComment({
-      #         issue_number: context.issue.number,
-      #         owner: context.repo.owner,
-      #         repo: context.repo.repo,
-      #         body: summary
-      #       });
       - name: Publish test results to GitHub (show tests in Checks)
         uses: dorny/test-reporter@v1
         if: always()
