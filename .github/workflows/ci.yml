@@ -63,16 +63,6 @@ jobs:
           find .pio/build/test_native/src -name "*.gcno" -exec gcov -b -l -p -c {} \;
 
           echo "✅ Coverage generation complete."
-          # - name: Generate coverage data
-          #   run: |
-          #     echo "Generating coverage data..."
-          #     cd .pio/build/test_native
-
-          #     # Generate coverage data with gcov while preserving paths and branch info.
-          #     # Use a POSIX shell to loop because gcov can produce multiple output files.
-          #     find . -type f -name "*.gcno" -print0 | xargs -0 -n1 -P4 sh -c 'gcov --preserve-paths --branch-counts --branch-probabilities "$0"' 
-
-          # Debug: Show what gcov files were created
           echo "=== Generated gcov files ==="
           find . -name "*.gcov" -ls
 
@@ -90,23 +80,6 @@ jobs:
             -o coverage.xml \
             --print-summary
 
-          # # Copy coverage XML back to workspace root (sonar-scanner will read this)
-          # ls -l coverage.xml
-          # cp coverage.xml $GITHUB_WORKSPACE/
-
-          # # Create coverage-reports and copy only relevant gcov files (project files)
-          # mkdir -p $GITHUB_WORKSPACE/coverage-reports
-          # echo "Copying relevant gcov files..."
-          # # Use find + tar pipeline to preserve paths in a portable way and avoid shell exec/|| issues
-          # # copy maker_api gcov files
-          # find . -name "*maker_api*.gcov" -print0 | tar --null -T - -cf - --no-recursion 2>/dev/null | tar -C $GITHUB_WORKSPACE/coverage-reports -xvf - 2>/dev/null || true
-          # # copy src and include gcov files (if present)
-          # find ./src -name "*.gcov" -print0 | tar --null -T - -cf - --no-recursion 2>/dev/null | tar -C $GITHUB_WORKSPACE/coverage-reports -xvf - 2>/dev/null || true
-          # find ./include -name "*.gcov" -print0 | tar --null -T - -cf - --no-recursion 2>/dev/null | tar -C $GITHUB_WORKSPACE/coverage-reports -xvf - 2>/dev/null || true
-
-          # echo "=== Contents of coverage-reports ==="
-          # ls -R $GITHUB_WORKSPACE/coverage-reports || true
-
           echo "✅ Coverage generation complete."
 
       # 8️⃣ git checkout main to fix shallow clone issues
@@ -115,42 +88,6 @@ jobs:
           git fetch --prune --unshallow || true
           git fetch origin +refs/heads/main:refs/remotes/origin/main || true
 
-      # - name: Debug Coverage
-      #   run: |
-      #     echo "=== Checking coverage files existence ==="
-      #     ls -l $GITHUB_WORKSPACE/coverage-reports/
-
-      #     echo "=== Checking coverage file contents ==="
-      #     head -n 20 $GITHUB_WORKSPACE/coverage-reports/*.gcov || true
-
-      #     echo "=== Checking coverage XML ==="
-      #     head -n 20 $GITHUB_WORKSPACE/coverage.xml || true
-
-      #     echo "=== Checking build wrapper output ==="
-      #     ls -l $GITHUB_WORKSPACE/bw-output/
-
-      # 9️⃣ Run SonarCloud analysis
-      - name: Run SonarCloud analysis
-        run: |
-          echo "Running sonar-scanner..."
-          # sonar-scanner \
-          #   -Dsonar.host.url=https://sonarcloud.io \
-          #   -Dsonar.organization=andrewmherren \
-          #   -Dsonar.projectKey=andrewmherren_maker_api \
-          #   -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
-          #   -Dsonar.sources=$GITHUB_WORKSPACE/src,$GITHUB_WORKSPACE/include \
-          #   -Dsonar.tests=$GITHUB_WORKSPACE/test \
-          #   -Dsonar.exclusions=**/build-wrapper-dump.json \
-          #   -Dsonar.coverage.exclusions=**/test/**/* \
-          #   -Dsonar.cfamily.compile-commands=$GITHUB_WORKSPACE/bw-output/compile_commands.json \
-          #   -Dsonar.cfamily.gcov.reportsPath=$GITHUB_WORKSPACE \
-          #   -Dsonar.cfamily.gcov.xmlReportPaths=$GITHUB_WORKSPACE/coverage.xml \
-          #   -Dsonar.cpp.file.suffixes=.cpp,.h,.hpp \
-          #   -Dsonar.c.file.suffixes=.c \
-          #   -Dsonar.lang.patterns.cpp=**/*.cpp,**/*.h,**/*.hpp \
-          #   -Dsonar.lang.patterns.c=**/*.c \
-          #   -Dsonar.sourceEncoding=UTF-8 \
-          #   -Dsonar.working.directory=$GITHUB_WORKSPACE/.scannerwork
           sonar-scanner \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.organization=andrewmherren \
