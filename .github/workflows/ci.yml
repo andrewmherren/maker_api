@@ -82,6 +82,9 @@ jobs:
 
           echo "✅ Coverage generation complete."
 
+          ls -l .pio/build/test_native
+          tail -n 50 .pio/build/test_native/maker_api/src/maker_api.cpp.gcov || true
+
       # 8️⃣ git checkout main to fix shallow clone issues
       - name: Fix shallow clone for SonarCloud
         run: |
