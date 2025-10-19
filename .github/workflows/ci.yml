@@ -41,7 +41,8 @@ jobs:
       - name: Build and test with build-wrapper
         run: |
           mkdir -p bw-output
-          $BUILD_WRAPPER_PATH --out-dir bw-output pio test -e test_native --junit-output test-results/results.xml
+          mkdir -p test-results
+          $BUILD_WRAPPER_PATH --out-dir bw-output pio test -e test_native --junit-output-path test-results/results.xml || true
 
       - name: Generate coverage data
         run: |
@@ -87,13 +88,26 @@ jobs:
             -Dsonar.sourceEncoding=UTF-8 \
             -Dsonar.working.directory=.scannerwork
 
-      - name: Publish test results
+      - name: Publish test results to GitHub (show tests in Checks)
         uses: dorny/test-reporter@v1
         if: always()
         with:
           name: PlatformIO Tests
           path: test-results/results.xml
           reporter: java-junit
+
+      - name: Generate AI-ready uncovered snippets
+        run: |
+          echo "Generating uncovered-snippets.jsonl for AI assistants..."
+          python3 tools/extract_uncovered.py --coverage coverage.xml \
+            --root $GITHUB_WORKSPACE --out uncovered-snippets.jsonl --context 4 --max-block 50
+          ls -l uncovered-snippets.jsonl || true
+
+      - name: Upload uncovered snippets artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: uncovered-snippets
+          path: uncovered-snippets.jsonl
 
       # Optional: Upload coverage.xml as an artifact for debugging
       # - name: Upload coverage report
