@@ -1,59 +1,23 @@
-#include <unity.h>
+#include "unity.h"
 
 // Use ArduinoFake for proper Arduino mocking
 #include <ArduinoFake.h>
 #include <ArduinoJson.h>
 
-// Use centralized testing infrastructure from web_platform_interface
+#include "test_maker_api.h"
 #include <testing/testing_platform_provider.h>
 
 // Include the actual maker_api header
 #include "../include/maker_api.h"
-
-// Define compilation flags for testing if not already defined
-#ifndef OPENAPI_ENABLED
-#ifdef WEB_PLATFORM_OPENAPI
-#define OPENAPI_ENABLED 1
-#else
-#define OPENAPI_ENABLED 0
-#endif
-#endif
-
-#ifndef MAKERAPI_ENABLED
-#ifdef WEB_PLATFORM_MAKERAPI
-#define MAKERAPI_ENABLED 1
-#else
-#define MAKERAPI_ENABLED 0
-#endif
-#endif
-
-// Use centralized mock platform from testing infrastructure
 
 // Include assets for verification
 #include "../assets/maker_api_dashboard_html.h"
 #include "../assets/maker_api_styles_css.h"
 #include "../assets/maker_api_utils_js.h"
 
-static std::unique_ptr<MockWebPlatformProvider> mockProvider;
-static std::unique_ptr<MakerAPIModule> testModule;
-
-void setUp() {
-  ArduinoFakeReset();
-
-  // Create mock platform provider and set the global instance
-  mockProvider = std::make_unique<MockWebPlatformProvider>();
-  IWebPlatformProvider::instance = mockProvider.get();
-
-  // Instantiate your module using default constructor
-  testModule = std::make_unique<MakerAPIModule>();
-  testModule->begin();
-}
-
-void tearDown() {
-  testModule.reset();
-  mockProvider.reset();
-  IWebPlatformProvider::instance = nullptr;
-}
+// These are now defined in test_main.cpp
+extern std::unique_ptr<MockWebPlatformProvider> mockProvider;
+extern std::unique_ptr<MakerAPIModule> testModule;
 
 // Test module basic properties
 void test_maker_api_module_properties() {
@@ -303,10 +267,7 @@ void test_module_platform_integration() {
   TEST_ASSERT_EQUAL_STRING("/maker-api", registeredModules[0].first.c_str());
 }
 
-#ifdef NATIVE_PLATFORM
-int main(int argc, char **argv) {
-  UNITY_BEGIN();
-
+void register_maker_api_tests() {
   RUN_TEST(test_maker_api_module_properties);
   RUN_TEST(test_maker_api_module_lifecycle);
   RUN_TEST(test_maker_api_http_routes);
@@ -319,28 +280,4 @@ int main(int argc, char **argv) {
   RUN_TEST(test_openapi_config_handler_with_flags);
   RUN_TEST(test_static_asset_routes);
   RUN_TEST(test_module_platform_integration);
-
-  UNITY_END();
-  return 0;
 }
-#else
-void setup() {
-  UNITY_BEGIN();
-
-  RUN_TEST(test_maker_api_module_properties);
-  RUN_TEST(test_maker_api_module_lifecycle);
-  RUN_TEST(test_maker_api_http_routes);
-  RUN_TEST(test_maker_api_https_routes);
-  RUN_TEST(test_maker_api_openapi_docs);
-  RUN_TEST(test_maker_api_config_api_handler);
-  RUN_TEST(test_maker_api_compilation_flags);
-  RUN_TEST(test_constructor_with_provider);
-  RUN_TEST(test_get_platform_helper);
-  RUN_TEST(test_openapi_config_handler_with_flags);
-  RUN_TEST(test_static_asset_routes);
-  RUN_TEST(test_module_platform_integration);
-
-  UNITY_END();
-}
-void loop() {}
-#endif
