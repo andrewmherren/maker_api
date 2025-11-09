@@ -1,7 +1,6 @@
 #include "maker_api.h"
-#include <ArduinoJson.h>
 
-#ifndef MAKER_API_STANDALONE_TEST
+#ifndef STANDALONE_TESTS
 #include "platform_provider.h"
 #endif
 
@@ -10,13 +9,19 @@
 #include "../assets/maker_api_styles_css.h"
 #include "../assets/maker_api_utils_js.h"
 
-// Global instance of MakerAPIModule
+// Global instance of MakerAPIModule for production builds
+#if defined(ARDUINO) || defined(ESP_PLATFORM)
 // NOSONAR - This module instance must be mutable as it maintains state and
 // implements lifecycle methods
 MakerAPIModule makerAPI; // NOSONAR
+#endif
+
+// ===========================================================================
+// Constructor & Lifecycle
+// ===========================================================================
 
 MakerAPIModule::MakerAPIModule() : platformProvider(nullptr) {
-#ifndef MAKER_API_STANDALONE_TEST
+#ifndef STANDALONE_TESTS
   // In production, use the global platform provider
   platformProvider = IWebPlatformProvider::instance;
 #endif
@@ -28,94 +33,97 @@ MakerAPIModule::MakerAPIModule(IWebPlatformProvider *provider)
 MakerAPIModule::~MakerAPIModule() = default;
 
 void MakerAPIModule::begin() {
-  // Nothing needed here - we're just serving UI assets
+  DEBUG_PRINTLN("Maker API module initialized");
 }
 
 void MakerAPIModule::handle() {
   // Nothing to do in regular processing
 }
 
+// ===========================================================================
+// OpenAPI Configuration Helpers
+// ===========================================================================
+
+MakerAPIModule::OpenAPIConfigStatus MakerAPIModule::getOpenAPIStatus() const {
+  OpenAPIConfigStatus status;
+  status.fullSpec = false;
+  status.makerSpec = false;
+
+#if OPENAPI_ENABLED
+  status.fullSpec = true;
+#endif
+#if MAKERAPI_ENABLED
+  status.makerSpec = true;
+#endif
+
+  return status;
+}
+
 OpenAPIDocumentation MakerAPIModule::getOpenAPIConfigDocs() const {
   return OpenAPIFactory::create("Get OpenAPI configuration",
-                                "Retrieves a system information about the "
-                                "availability of OpenAPI information.",
+                                "Retrieves system information about the "
+                                "availability of OpenAPI documentation.",
                                 "getOpenAPIConfig", {"Maker API"})
       .withResponseExample(R"({
         "success": true,
         "OpenApiConfig": {
-          fullSpec: true
-          makerSpec: true
+          "fullSpec": true,
+          "makerSpec": true
         }
       })")
       .withResponseSchema(OpenAPIFactory::createSuccessResponse(
           "System OpenAPI configuration"));
 }
 
-void MakerAPIModule::getOpenAPIConfigHandler(WebRequest &req,
-                                             WebResponse &res) const {
+void MakerAPIModule::getOpenAPIConfigHandler(RequestT &req, ResponseT &res) {
+  OpenAPIConfigStatus status = getOpenAPIStatus();
 
-  bool fullSpec = false;
-  bool makerSpec = false;
+  respondJson(res, [&status](JsonObject &root) {
+    root["success"] = true;
 
-#if OPENAPI_ENABLED
-  fullSpec = true;
-#endif
-#if MAKERAPI_ENABLED
-  makerSpec = true;
-#endif
-
-  // Use JsonResponseBuilder for simple response
-  getPlatform().createJsonResponse(
-      res,
-      [fullSpec, makerSpec](
-          JsonObject &root) { // NOSONAR - JsonObject must be non-const as we're
-                              // modifying it by adding key-value pairs
-        root["success"] = true;
-
-        JsonObject config = root["OpenApiConfig"].to<JsonObject>();
-        config["fullSpec"] = fullSpec;
-        config["makerSpec"] = makerSpec;
-      });
+    JsonObject config = root["OpenApiConfig"].to<JsonObject>();
+    config["fullSpec"] = status.fullSpec;
+    config["makerSpec"] = status.makerSpec;
+  });
 }
 
+// ===========================================================================
+// Route Registration
+// ===========================================================================
+
 std::vector<RouteVariant> MakerAPIModule::getHttpRoutes() {
-  std::vector<RouteVariant> routes;
+  return {
+      // Main dashboard page
+      WebRoute("/", WebModule::WM_GET,
+               [](RequestT &req, ResponseT &res) {
+                 res.setProgmemContent(MAKER_API_DASHBOARD_HTML, "text/html");
+               },
+               {AuthType::NONE}),
 
-  // Main dashboard routes
-  routes.push_back(WebRoute("/", WebModule::WM_GET,
-                            [](WebRequest &, WebResponse &res) {
-                              res.setProgmemContent(MAKER_API_DASHBOARD_HTML,
-                                                    "text/html");
-                            },
-                            {AuthType::NONE}));
-
-  // Static assets
-  routes.push_back(
+      // CSS stylesheet
       WebRoute("/assets/maker-api-style.css", WebModule::WM_GET,
-               [](WebRequest &, WebResponse &res) {
+               [](RequestT &req, ResponseT &res) {
                  res.setProgmemContent(MAKER_API_STYLES_CSS, "text/css");
                  res.setHeader("Cache-Control", "public, max-age=3600");
                },
-               {AuthType::NONE}));
+               {AuthType::NONE}),
 
-  routes.push_back(
+      // JavaScript utilities
       WebRoute("/assets/maker-api-utils.js", WebModule::WM_GET,
-               [](WebRequest &, WebResponse &res) {
+               [](RequestT &req, ResponseT &res) {
                  res.setProgmemContent(MAKER_API_UTILS_JS,
                                        "application/javascript; charset=utf-8");
                  res.setHeader("Cache-Control", "public, max-age=3600");
                },
-               {AuthType::NONE}));
+               {AuthType::NONE}),
 
-  routes.push_back(ApiRoute(
-      "/config", WebModule::WM_POST,
-      [this](WebRequest &req, WebResponse &res) {
-        getOpenAPIConfigHandler(req, res);
-      },
-      {AuthType::SESSION, AuthType::PAGE_TOKEN, AuthType::TOKEN},
-      API_DOC_BLOCK(getOpenAPIConfigDocs())));
-
-  return routes;
+      // OpenAPI configuration endpoint
+      ApiRoute("/config", WebModule::WM_POST,
+               [this](RequestT &req, ResponseT &res) {
+                 getOpenAPIConfigHandler(req, res);
+               },
+               {AuthType::SESSION, AuthType::PAGE_TOKEN, AuthType::TOKEN},
+               API_DOC_BLOCK(getOpenAPIConfigDocs()))};
 }
 
 std::vector<RouteVariant> MakerAPIModule::getHttpsRoutes() {
