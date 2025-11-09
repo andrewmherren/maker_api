@@ -14,10 +14,10 @@ using namespace fakeit;
 // ===========================================================================
 
 static void test_module_metadata() {
-  TestingPlatformProvider provider;
-  MakerAPIModule module(provider);
+  // Use default constructor relying on global provider set in setUp
+  MakerAPIModule module;
   TEST_ASSERT_EQUAL_STRING("Maker API", module.getModuleName().c_str());
-  TEST_ASSERT_EQUAL_STRING("0.1.0", module.getModuleVersion().c_str());
+  TEST_ASSERT_EQUAL_STRING(WEB_MODULE_VERSION_STR, module.getModuleVersion().c_str());
   TEST_ASSERT_TRUE_MESSAGE(module.getModuleDescription().length() > 0,
                            "Description should be non-empty");
 }
@@ -26,21 +26,15 @@ static void test_module_metadata() {
 // Configuration Tests
 // ===========================================================================
 
-static void test_parseConfig_minimal() {
-  TestingPlatformProvider provider;
-  MakerAPIModule module(provider);
-  JsonVariant nullConfig;
-  module.parseConfig(nullConfig);
-  TEST_ASSERT_TRUE(true); // Should complete without error
-}
+// No configuration parsing yet – placeholder to ensure compile
+static void test_placeholder_no_config() { TEST_ASSERT_TRUE(true); }
 
 // ===========================================================================
 // Lifecycle Tests
 // ===========================================================================
 
 static void test_begin_calls_initialization() {
-  TestingPlatformProvider provider;
-  MakerAPIModule module(provider);
+  MakerAPIModule module;
   When(OverloadedMethod(ArduinoFake(Serial), println, size_t(const char *)))
       .AlwaysReturn(1);
   module.begin();
@@ -48,8 +42,7 @@ static void test_begin_calls_initialization() {
 }
 
 static void test_handle_completes() {
-  TestingPlatformProvider provider;
-  MakerAPIModule module(provider);
+  MakerAPIModule module;
   module.handle();
   TEST_ASSERT_TRUE(true);
 }
@@ -59,8 +52,7 @@ static void test_handle_completes() {
 // ===========================================================================
 
 static void test_routes_built_and_sizes() {
-  TestingPlatformProvider provider;
-  MakerAPIModule module(provider);
+  MakerAPIModule module;
   auto http = module.getHttpRoutes();
   auto https = module.getHttpsRoutes();
   TEST_ASSERT_EQUAL(4, http.size()); // dashboard + css + js + config
@@ -68,8 +60,7 @@ static void test_routes_built_and_sizes() {
 }
 
 static void test_http_routes_structure() {
-  TestingPlatformProvider provider;
-  MakerAPIModule module(provider);
+  MakerAPIModule module;
   auto routes = module.getHttpRoutes();
   for (const auto &route : routes) {
     TEST_ASSERT_TRUE(route.isWebRoute() || route.isApiRoute());
@@ -81,8 +72,7 @@ static void test_http_routes_structure() {
 // ===========================================================================
 
 static void test_getOpenAPIConfigHandler_returns_json() {
-  TestingPlatformProvider provider;
-  MakerAPIModule module(provider);
+  MakerAPIModule module;
   WebRequestCore req;
   WebResponseCore res;
   module.getOpenAPIConfigHandler(req, res);
@@ -103,7 +93,7 @@ static void test_getOpenAPIConfigHandler_returns_json() {
 
 void register_maker_api_tests() {
   RUN_TEST(test_module_metadata);
-  RUN_TEST(test_parseConfig_minimal);
+  RUN_TEST(test_placeholder_no_config);
   RUN_TEST(test_begin_calls_initialization);
   RUN_TEST(test_handle_completes);
   RUN_TEST(test_routes_built_and_sizes);

@@ -75,7 +75,7 @@ OpenAPIDocumentation MakerAPIModule::getOpenAPIConfigDocs() const {
           "System OpenAPI configuration"));
 }
 
-void MakerAPIModule::getOpenAPIConfigHandler(RequestT &req, ResponseT &res) {
+void MakerAPIModule::getOpenAPIConfigHandler(RequestT &req, ResponseT &res) const {
   OpenAPIConfigStatus status = getOpenAPIStatus();
 
   respondJson(res, [&status](JsonObject &root) {
