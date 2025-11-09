@@ -63,15 +63,8 @@ int main(int argc, char **argv) {
 extern "C" void setUp(void) {}
 extern "C" void tearDown(void) {}
 
-// Optional: still allow a minimal sanity test
-static void test_esp32_sanity_compiles_and_runs() { TEST_ASSERT_TRUE(true); }
-
-// Forward declarations for on-device tests (defined under test/esp32)
-void test_esp32_module_compiles();
-void test_esp32_begin_does_not_crash();
-void test_esp32_handle_does_not_crash();
-void test_esp32_get_routes_does_not_crash();
-void test_esp32_module_metadata();
+// Forward declaration for ESP32 test registration
+void register_esp32_maker_api_tests();
 
 void setup() {
   // Allow USB CDC/Serial to enumerate
@@ -85,14 +78,7 @@ void setup() {
   delay(500);
 
   // Register and run esp32 tests
-  RUN_TEST(test_esp32_sanity_compiles_and_runs);
-  RUN_TEST(test_esp32_module_compiles);
-  RUN_TEST(test_esp32_begin_does_not_crash);
-  RUN_TEST(test_esp32_begin_with_config_does_not_crash);
-  RUN_TEST(test_esp32_handle_does_not_crash);
-  RUN_TEST(test_esp32_get_routes_does_not_crash);
-  RUN_TEST(test_esp32_module_metadata);
-  RUN_TEST(test_esp32_accessors);
+  register_esp32_maker_api_tests();
 
   UNITY_END();
 }
