@@ -13,6 +13,11 @@
 #include <web_platform_interface.h>
 #include "version_autogen.h"
 
+// Compile-time check: ensure version was injected
+#ifndef WEB_MODULE_VERSION_STR
+#error "WEB_MODULE_VERSION_STR not defined (version_autogen.h missing)."
+#endif
+
 /**
  * @brief Maker API Module - Interactive API documentation and testing interface
  * 
@@ -38,11 +43,6 @@ public:
   std::vector<RouteVariant> getHttpRoutes() override;
   std::vector<RouteVariant> getHttpsRoutes() override;
   String getModuleName() const override { return "Maker API"; }
-  // Version must be injected at build time from library.json as WEB_MODULE_VERSION_STR
-  // via PlatformIO extra_script. Intentionally fail build if missing.
-#ifndef WEB_MODULE_VERSION_STR
-#error "WEB_MODULE_VERSION_STR not defined (version_autogen.h missing)."
-#endif
   String getModuleVersion() const override { return WEB_MODULE_VERSION_STR; }
   String getModuleDescription() const override {
     return "API documentation and testing interface for makers";
