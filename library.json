@@ -17,16 +17,10 @@
     "homepage": "https://github.com/andrewmherren/maker_api",
     "dependencies": {
         "bblanchon/ArduinoJson": "^6.20.0",
-        "web_platform_interface": "https://github.com/andrewmherren/web_platform_interface.git"
+        "web_platform_interface": "https://github.com/andrewmherren/web_platform_interface.git#cpp_arduino"
     },
     "frameworks": "*",
     "platforms": [
         "espressif32"
-    ],
-    "export": {
-        "note": "Before release: Add web_platform_interface dependency",
-        "dependencies_for_release": {
-            "andrewmherren/web_platform_interface": "https://github.com/andrewmherren/web_platform_interface.git#cpp_arduino"
-        }
-    }
+    ]
 }
