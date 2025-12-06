@@ -274,6 +274,14 @@ The debug output will show which tags are being used for filtering and which rou
 4. **Simplicity**: Keep parameter requirements minimal and intuitive
 5. **Consistency**: Use consistent naming and response formats
 
+## Related Projects
+
+- **[web_platform](https://github.com/andrewmherren/web_platform)**: Core WebPlatform implementation
+- **[web_platform_interface](https://github.com/andrewmherren/web_platform_interface)**: Core interface and testing library for WebPlatform ecosystem
+- **[usb_pd_controller](https://github.com/andrewmherren/usb_pd_controller)**: USB-C Power Delivery control module
+- **[ota_update](https://github.com/andrewmherren/ota_update)**: Over-the-air firmware update module
+- **[web_module_example](https://github.com/andrewmherren/web_module_example)**: Boilerplate template for creating custom WebPlatform modules
+
 ## License
 
 This module is part of the WebPlatform ecosystem and follows the same licensing terms.
