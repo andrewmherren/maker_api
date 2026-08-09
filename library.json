@@ -10,7 +10,7 @@
     "authors": [
         {
             "name": "Andrew Herren",
-            "url": "https://github.com/andrwemherren"
+            "url": "https://github.com/andrewmherren"
         }
     ],
     "license": "MIT",
@@ -18,7 +18,7 @@
     "dependencies": {
         "bblanchon/ArduinoJson": "^7.0.0",
         "ArduinoFAKE": "https://github.com/FabioBatSilva/ArduinoFake.git",
-        "web_platform_interface": "https://github.com/andrewmherren/web_platform_interface.git"
+        "web_platform_interface": "https://github.com/andrewmherren/web_platform_interface.git#c81f94625bd560506951778d7b770a7c158b33e8"
     },
     "frameworks": [
         "arduino",
