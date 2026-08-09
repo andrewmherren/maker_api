@@ -43,8 +43,8 @@ OpenAPIDocumentation MakerAPIModule::getOpenAPIConfigDocs() const {
       .withResponseExample(R"({
         "success": true,
         "OpenApiConfig": {
-          fullSpec: true
-          makerSpec: true
+          "fullSpec": true,
+          "makerSpec": true
         }
       })")
       .withResponseSchema(OpenAPIFactory::createSuccessResponse(
