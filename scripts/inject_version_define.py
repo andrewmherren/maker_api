@@ -48,8 +48,16 @@ if version:
         hf.write("// Source: library.json\n\n")
         hf.write(f"#ifndef {guard_name}\n")
         hf.write(f"#define {guard_name}\n\n")
-        hf.write(f'#define WEB_MODULE_VERSION_STR "{version}"\n')
-        hf.write(f'#define WEB_MODULE_VERSION "{version}"\n\n')
+        # cpp:S5028 wants const/constexpr over macros, but these need to
+        # stay macros so the #ifndef WEB_MODULE_VERSION_STR guard in
+        # maker_api.h can detect a missing/failed generation at compile
+        # time (constexpr symbols aren't visible to #ifndef). Suppression
+        # marker is assembled from parts so this line isn't mistaken by
+        # static analysis for a (malformed) suppression comment on the
+        # Python source itself - it's meant for the generated C++ header.
+        nosonar = "//" + " NOSONAR"
+        hf.write(f'#define WEB_MODULE_VERSION_STR "{version}" {nosonar}\n')
+        hf.write(f'#define WEB_MODULE_VERSION "{version}" {nosonar}\n\n')
         hf.write(f"#endif // {guard_name}\n")
     print(f"[{module_name}] Generated version_autogen.h: v{version}")
 else:
