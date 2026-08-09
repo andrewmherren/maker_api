@@ -7,6 +7,7 @@
 #include <ArduinoFake.h>
 #endif
 
+#include <interface/request_response_types.h>
 #include <web_platform_interface.h>
 
 class MakerAPIModule : public IWebModule {
@@ -43,7 +44,7 @@ private:
   IWebPlatform &getPlatform() const { return platformProvider->getPlatform(); }
 
   // Internal handler
-  void getOpenAPIConfigHandler(WebRequest &req, WebResponse &res) const;
+  void getOpenAPIConfigHandler(RequestT &req, ResponseT &res) const;
 };
 
 // Global instance for production builds

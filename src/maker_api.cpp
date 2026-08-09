@@ -51,8 +51,8 @@ OpenAPIDocumentation MakerAPIModule::getOpenAPIConfigDocs() const {
           "System OpenAPI configuration"));
 }
 
-void MakerAPIModule::getOpenAPIConfigHandler(WebRequest &req,
-                                             WebResponse &res) const {
+void MakerAPIModule::getOpenAPIConfigHandler(RequestT &req,
+                                             ResponseT &res) const {
 
   bool fullSpec = false;
   bool makerSpec = false;
@@ -83,7 +83,7 @@ std::vector<RouteVariant> MakerAPIModule::getHttpRoutes() {
 
   // Main dashboard routes
   routes.push_back(WebRoute("/", WebModule::WM_GET,
-                            [](WebRequest &, WebResponse &res) {
+                            [](RequestT &, ResponseT &res) {
                               res.setProgmemContent(MAKER_API_DASHBOARD_HTML,
                                                     "text/html");
                             },
@@ -92,7 +92,7 @@ std::vector<RouteVariant> MakerAPIModule::getHttpRoutes() {
   // Static assets
   routes.push_back(
       WebRoute("/assets/maker-api-style.css", WebModule::WM_GET,
-               [](WebRequest &, WebResponse &res) {
+               [](RequestT &, ResponseT &res) {
                  res.setProgmemContent(MAKER_API_STYLES_CSS, "text/css");
                  res.setHeader("Cache-Control", "public, max-age=3600");
                },
@@ -100,7 +100,7 @@ std::vector<RouteVariant> MakerAPIModule::getHttpRoutes() {
 
   routes.push_back(
       WebRoute("/assets/maker-api-utils.js", WebModule::WM_GET,
-               [](WebRequest &, WebResponse &res) {
+               [](RequestT &, ResponseT &res) {
                  res.setProgmemContent(MAKER_API_UTILS_JS,
                                        "application/javascript; charset=utf-8");
                  res.setHeader("Cache-Control", "public, max-age=3600");
@@ -109,7 +109,7 @@ std::vector<RouteVariant> MakerAPIModule::getHttpRoutes() {
 
   routes.push_back(ApiRoute(
       "/config", WebModule::WM_POST,
-      [this](WebRequest &req, WebResponse &res) {
+      [this](RequestT &req, ResponseT &res) {
         getOpenAPIConfigHandler(req, res);
       },
       {AuthType::SESSION, AuthType::PAGE_TOKEN, AuthType::TOKEN},
