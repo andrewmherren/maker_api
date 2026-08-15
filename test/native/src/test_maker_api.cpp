@@ -1,5 +1,7 @@
 #include <unity.h>
 
+#ifdef NATIVE_PLATFORM
+
 // Use ArduinoFake for proper Arduino mocking
 #include <ArduinoFake.h>
 #include <ArduinoJson.h>
@@ -8,7 +10,7 @@
 #include <testing/testing_platform_provider.h>
 
 // Include the actual maker_api header
-#include "../include/maker_api.h"
+#include <maker_api.h>
 
 // Define compilation flags for testing if not already defined
 #ifndef OPENAPI_ENABLED
@@ -27,39 +29,42 @@
 #endif
 #endif
 
-// Use centralized mock platform from testing infrastructure
-
 // Include assets for verification
-#include "../assets/maker_api_dashboard_html.h"
-#include "../assets/maker_api_styles_css.h"
-#include "../assets/maker_api_utils_js.h"
+#include "../../../assets/maker_api_dashboard_html.h"
+#include "../../../assets/maker_api_styles_css.h"
+#include "../../../assets/maker_api_utils_js.h"
 
+// maker_api's tests share one MakerAPIModule/MockWebPlatformProvider fixture
+// per test (built in setUp(), torn down in tearDown()) rather than
+// constructing local instances per test like sibling modules - kept as-is
+// when this file was split out of the old flat test/test_maker_api.cpp.
 static std::unique_ptr<MockWebPlatformProvider> mockProvider;
 static std::unique_ptr<MakerAPIModule> testModule;
 
-void setUp() {
+extern "C" void setUp(void) {
   ArduinoFakeReset();
 
   // Create mock platform provider and set the global instance
   mockProvider = std::make_unique<MockWebPlatformProvider>();
   IWebPlatformProvider::instance = mockProvider.get();
 
-  // Instantiate your module using default constructor
+  // Instantiate the module under test using the default constructor
   testModule = std::make_unique<MakerAPIModule>();
   testModule->begin();
 }
 
-void tearDown() {
+extern "C" void tearDown(void) {
   testModule.reset();
   mockProvider.reset();
   IWebPlatformProvider::instance = nullptr;
 }
 
 // Test module basic properties
-void test_maker_api_module_properties() {
+static void test_maker_api_module_properties() {
   auto &module = *testModule;
   TEST_ASSERT_EQUAL_STRING("Maker API", module.getModuleName().c_str());
-  TEST_ASSERT_EQUAL_STRING("0.1.0", module.getModuleVersion().c_str());
+  TEST_ASSERT_EQUAL_STRING(WEB_MODULE_VERSION_STR,
+                           module.getModuleVersion().c_str());
 
   String description = module.getModuleDescription();
   TEST_ASSERT_TRUE(description.length() > 0);
@@ -67,7 +72,7 @@ void test_maker_api_module_properties() {
 }
 
 // Test module lifecycle methods
-void test_maker_api_module_lifecycle() {
+static void test_maker_api_module_lifecycle() {
   auto &module = *testModule;
 
   // begin() should not crash (already called in setUp)
@@ -80,7 +85,7 @@ void test_maker_api_module_lifecycle() {
 }
 
 // Test HTTP routes generation
-void test_maker_api_http_routes() {
+static void test_maker_api_http_routes() {
   auto &module = *testModule;
   std::vector<RouteVariant> routes = module.getHttpRoutes();
 
@@ -95,7 +100,7 @@ void test_maker_api_http_routes() {
 }
 
 // Test HTTPS routes (should be identical to HTTP)
-void test_maker_api_https_routes() {
+static void test_maker_api_https_routes() {
   auto &module = *testModule;
   std::vector<RouteVariant> httpRoutes = module.getHttpRoutes();
   std::vector<RouteVariant> httpsRoutes = module.getHttpsRoutes();
@@ -105,7 +110,7 @@ void test_maker_api_https_routes() {
 }
 
 // Test OpenAPI documentation generation
-void test_maker_api_openapi_docs() {
+static void test_maker_api_openapi_docs() {
   auto &module = *testModule;
   OpenAPIDocumentation docs = module.getOpenAPIConfigDocs();
 
@@ -122,7 +127,7 @@ void test_maker_api_openapi_docs() {
 // Note: MockWebRequest and MockWebResponse are provided by mock_web_platform.h
 
 // Test config API handler structure (simplified without handler execution)
-void test_maker_api_config_api_handler() {
+static void test_maker_api_config_api_handler() {
   auto &module = *testModule;
   std::vector<RouteVariant> routes = module.getHttpRoutes();
   TEST_ASSERT_GREATER_THAN(3, routes.size());
@@ -142,7 +147,7 @@ void test_maker_api_config_api_handler() {
 }
 
 // Test compilation flag behavior
-void test_maker_api_compilation_flags() {
+static void test_maker_api_compilation_flags() {
 // Verify build flags are correctly defined
 #ifdef WEB_PLATFORM_OPENAPI
   bool openApiFlag = true;
@@ -169,19 +174,19 @@ void test_maker_api_compilation_flags() {
 }
 
 // Test constructor with provider parameter (covers lines 23-24)
-void test_constructor_with_provider() {
+static void test_constructor_with_provider() {
   MockWebPlatformProvider testProvider;
   MakerAPIModule moduleWithProvider(&testProvider);
 
   // Verify module initialized properly
   TEST_ASSERT_EQUAL_STRING("Maker API",
                            moduleWithProvider.getModuleName().c_str());
-  TEST_ASSERT_EQUAL_STRING("0.1.0",
+  TEST_ASSERT_EQUAL_STRING(WEB_MODULE_VERSION_STR,
                            moduleWithProvider.getModuleVersion().c_str());
 }
 
 // Test getPlatform() helper method (covers line 42)
-void test_get_platform_helper() {
+static void test_get_platform_helper() {
   // Access to getPlatform() is tested indirectly by testing methods that use it
   std::vector<RouteVariant> routes = testModule->getHttpRoutes();
 
@@ -195,7 +200,8 @@ void test_get_platform_helper() {
 
   // Test module properties that don't rely on platform calls
   TEST_ASSERT_EQUAL_STRING("Maker API", testModule->getModuleName().c_str());
-  TEST_ASSERT_EQUAL_STRING("0.1.0", testModule->getModuleVersion().c_str());
+  TEST_ASSERT_EQUAL_STRING(WEB_MODULE_VERSION_STR,
+                           testModule->getModuleVersion().c_str());
 
   // Test OpenAPI docs generation (which may use platform indirectly)
   OpenAPIDocumentation docs = testModule->getOpenAPIConfigDocs();
@@ -203,7 +209,7 @@ void test_get_platform_helper() {
 }
 
 // Test OpenAPI config handler verification (covers lines 52-73)
-void test_openapi_config_handler_with_flags() {
+static void test_openapi_config_handler_with_flags() {
   std::vector<RouteVariant> routes = testModule->getHttpRoutes();
   TEST_ASSERT_EQUAL(4, routes.size());
 
@@ -240,7 +246,7 @@ void test_openapi_config_handler_with_flags() {
 }
 
 // Test static asset route structure (covers lines 81, 83, 90-92, 98, 100-101)
-void test_static_asset_routes() {
+static void test_static_asset_routes() {
   std::vector<RouteVariant> routes = testModule->getHttpRoutes();
   TEST_ASSERT_EQUAL(4, routes.size());
 
@@ -280,7 +286,7 @@ void test_static_asset_routes() {
 }
 
 // Test module integration with platform
-void test_module_platform_integration() {
+static void test_module_platform_integration() {
   MockWebPlatform &mockPlatform = mockProvider->getMockPlatform();
 
   // Test platform basic functionality
@@ -303,10 +309,7 @@ void test_module_platform_integration() {
   TEST_ASSERT_EQUAL_STRING("/maker-api", registeredModules[0].first.c_str());
 }
 
-#ifdef NATIVE_PLATFORM
-int main(int argc, char **argv) {
-  UNITY_BEGIN();
-
+void register_maker_api_tests() {
   RUN_TEST(test_maker_api_module_properties);
   RUN_TEST(test_maker_api_module_lifecycle);
   RUN_TEST(test_maker_api_http_routes);
@@ -319,28 +322,6 @@ int main(int argc, char **argv) {
   RUN_TEST(test_openapi_config_handler_with_flags);
   RUN_TEST(test_static_asset_routes);
   RUN_TEST(test_module_platform_integration);
-
-  UNITY_END();
-  return 0;
 }
-#else
-void setup() {
-  UNITY_BEGIN();
 
-  RUN_TEST(test_maker_api_module_properties);
-  RUN_TEST(test_maker_api_module_lifecycle);
-  RUN_TEST(test_maker_api_http_routes);
-  RUN_TEST(test_maker_api_https_routes);
-  RUN_TEST(test_maker_api_openapi_docs);
-  RUN_TEST(test_maker_api_config_api_handler);
-  RUN_TEST(test_maker_api_compilation_flags);
-  RUN_TEST(test_constructor_with_provider);
-  RUN_TEST(test_get_platform_helper);
-  RUN_TEST(test_openapi_config_handler_with_flags);
-  RUN_TEST(test_static_asset_routes);
-  RUN_TEST(test_module_platform_integration);
-
-  UNITY_END();
-}
-void loop() {}
-#endif
+#endif // NATIVE_PLATFORM
