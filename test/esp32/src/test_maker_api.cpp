@@ -1,5 +1,5 @@
-#include <unity.h>
 #include <Arduino.h>
+#include <unity.h>
 
 #ifndef NATIVE_PLATFORM
 
@@ -37,8 +37,15 @@ void test_esp32_get_routes_does_not_crash() {
   auto httpRoutes = module.getHttpRoutes();
   auto httpsRoutes = module.getHttpsRoutes();
 
-  TEST_ASSERT_EQUAL(4, httpRoutes.size());
-  TEST_ASSERT_EQUAL(httpRoutes.size(), httpsRoutes.size());
+  // Every TEST_ASSERT_EQUAL* numeric-comparison variant crashes inside
+  // ESP-IDF's bundled Unity's own internal print path on this toolchain,
+  // even when the values are equal - confirmed via a deliberate
+  // encoded-fault-address crash dump (EXCVADDR decoded to
+  // httpRoutes.size()=4, httpsRoutes.size()=4, both correct - this is not
+  // a real bug in getHttpRoutes()/getHttpsRoutes()). TEST_ASSERT_TRUE takes
+  // Unity's boolean-assertion path instead, which doesn't hit this.
+  TEST_ASSERT_TRUE(httpRoutes.size() == 4);
+  TEST_ASSERT_TRUE(httpRoutes.size() == httpsRoutes.size());
 }
 
 void test_esp32_module_metadata() {
